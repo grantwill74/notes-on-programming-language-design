@@ -46,7 +46,7 @@ So, without further ado...
 
 # History of Haskell
 
-Haskell was designed by a committe to specifically be a Lazy functional programming language. (We'll explain what this means later).
+Haskell was designed by a committee to specifically be a Lazy functional programming language. (We'll explain what this means later).
 
 This has a specific technical meaning. It doesn't mean that it's chill. It's actually way weirder than that.
 
@@ -129,7 +129,7 @@ This idea was adapted to functional programming languages by treating arguments 
 
 A referentially transparent function is one in which all the references to its arguments can be replaced by the argument.
 
-So that function from earlier, $f(x) = 2x$ is referentially transparent, becuase $f(7)$ can be rewritten as $f(7) = 2(7)$ without getting something wrong.
+So that function from earlier, $f(x) = 2x$ is referentially transparent, because $f(7)$ can be rewritten as $f(7) = 2(7)$ without getting something wrong.
 
 Can anyone think of a function that is *not* referentially transparent.
 
@@ -145,7 +145,7 @@ But in Haskell, this would not be possible. It has to always return the same thi
 
 And since `input` has no arguments, that means it has to always return the same thing. It would have to be a constant.
 
-Another example: in C, `scanf` returns the number of characters it read. That's going to depend on what's in standard input.
+Another example: in C, `scanf` returns the number of format specifiers it matched. That's going to depend on what's in standard input.
 
 ---
 
@@ -482,7 +482,7 @@ Let's understand that code better and review the basics of Haskell that you've a
 
 First, Haskell is a statically-typed language. Every expression has a well-defined type that is known at compile time.
 
-A Haskell source file is a list of definitions where are largely either functions or constants (ignoring modules for now). Each definition has an equals sign: `=`.
+A Haskell source file is a list of definitions which are largely either functions or constants (ignoring modules for now). Each definition has an equals sign: `=`.
 
 Each defition can have a type explicitely listed, or Haskell can try to infer it. Usually we like to list them, especially for functions, for documentation. Types can be hard to parse by eye. 
 
@@ -516,7 +516,7 @@ Anyway, they can be named the same as C variables: no number up front, but any c
 
 Haskell usually uses camelCase rather than snake_case, but you can use either.
 
-However, unlike C, you can put a `\` ` ("prime") anywhere but the first character.
+However, unlike C, you can put a `` ` `` ("prime") anywhere but the first character.
 
 So `hello'` and `world''` and technically `w''orld` (but don't do that) are valid names.
 
