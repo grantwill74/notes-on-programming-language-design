@@ -262,7 +262,7 @@ could do anything in it.</p>
 <p>So, without further ado…</p>
 <hr />
 <h1 id="history-of-haskell">History of Haskell</h1>
-<p>Haskell was designed by a committe to specifically be a Lazy
+<p>Haskell was designed by a committee to specifically be a Lazy
 functional programming language. (We’ll explain what this means
 later).</p>
 <p>This has a specific technical meaning. It doesn’t mean that it’s
@@ -348,7 +348,7 @@ arguments to functions as “referrents”.</p>
 <p>A referentially transparent function is one in which all the
 references to its arguments can be replaced by the argument.</p>
 <p>So that function from earlier, <span class="math inline">\(f(x) =
-2x\)</span> is referentially transparent, becuase <span
+2x\)</span> is referentially transparent, because <span
 class="math inline">\(f(7)\)</span> can be rewritten as <span
 class="math inline">\(f(7) = 2(7)\)</span> without getting something
 wrong.</p>
@@ -366,8 +366,8 @@ the same thing given the same arguments.</p>
 <p>And since <code>input</code> has no arguments, that means it has to
 always return the same thing. It would have to be a constant.</p>
 <p>Another example: in C, <code>scanf</code> returns the number of
-characters it read. That’s going to depend on what’s in standard
-input.</p>
+format specifiers it matched. That’s going to depend on what’s in
+standard input.</p>
 <hr />
 <h1 id="no-side-effects">No side effects</h1>
 <p>The other aspect of pure functions is that they have no <em>side
@@ -650,7 +650,7 @@ interactive mode, in which you type one line at a time, or
 that you’ve already seen from your reading.</p>
 <p>First, Haskell is a statically-typed language. Every expression has a
 well-defined type that is known at compile time.</p>
-<p>A Haskell source file is a list of definitions where are largely
+<p>A Haskell source file is a list of definitions which are largely
 either functions or constants (ignoring modules for now). Each
 definition has an equals sign: <code>=</code>.</p>
 <p>Each defition can have a type explicitely listed, or Haskell can try
@@ -679,7 +679,7 @@ front, but any combination of lowercase, uppercase, and numeric
 chars.</p>
 <p>Haskell usually uses camelCase rather than snake_case, but you can
 use either.</p>
-<p>However, unlike C, you can put a <code>\</code> ` (“prime”) anywhere
+<p>However, unlike C, you can put a <code>`</code> (“prime”) anywhere
 but the first character.</p>
 <p>So <code>hello'</code> and <code>world''</code> and technically
 <code>w''orld</code> (but don’t do that) are valid names.</p>
