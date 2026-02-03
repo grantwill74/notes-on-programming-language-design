@@ -831,7 +831,7 @@ There's also sub-type polymorphism, where we inherit from something to change it
 
 # Knowledge check 2
 
-1. Define a type that takes three arguments of any type and returns something of the same type as the first argument.
+1. Define a function that takes three arguments of any type and returns something of the same type as the first argument.
 2. Define a function of that type.
 3. Define a function that's like `const`, but the function it returns takes two values of any type (instead of one) before ignoring them and returning the argument to const (also of any type).
 4. What is the type of that function?
@@ -938,7 +938,7 @@ This "pipeline" style of programming is central to functional programming. We do
 Notice that when we do this, the variable goes away on the left-hand side:
 ```haskell
 stuff x = print (2*x + 1) -- versus
-stuff' = print . (+1) . (2*x)
+stuff' = print . (+1) . (2*)
 ```
 
 The reason is that the composition operators create a function that takes a value, so we don't need a variable.
@@ -957,10 +957,8 @@ It's an optional coding style that is culturally popular in Haskell. It can be i
 
 # Knowledge Check 3
 
-1. Define a function point free that evaluates the polynomial $x^2 + 2x + 9$ point free.
-2. What is a type that is compatible with the function you defined? (That is, it wouldn't be wrong to put that type above it).
-3. What is the type of `(*2.5) . (*2.5) . (*2.5)`?
-4. Rewrite that function but not point-free.
+1. What is the type of `(*2.5) . (*2.5) . (*2.5)`?
+2. Rewrite that function but not point-free.
 
 
 
@@ -968,10 +966,8 @@ It's an optional coding style that is culturally popular in Haskell. It can be i
 
 # Knowledge Check 3 answers
 
-1. `f = (+9) . (2.5*) . (^2)`
-2. `Float -> Float`
-3. `Float -> Float`
-4. `f x = 2.5 * 2.5 * 2.5 * x` or `f x = 15.625 * x`
+1. `Float -> Float`
+2. `f x = 2.5 * 2.5 * 2.5 * x` or `f x = 15.625 * x`
 
 
 ---
