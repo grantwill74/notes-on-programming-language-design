@@ -595,7 +595,345 @@ So, for the `Maybe` monad: `(>>=) :: Maybe a -> (a -> Maybe b) -> Maybe b`
 
 This type means "take a maybe and a function. The function will receive the value inside the maybe if it exists and then return a new maybe"
 
-The bind operator for `Maybe` 
+The bind operator for `Maybe` is supposed to check if the maybe being bound is `Nothing`, and if so, return `Nothing`. Otherwise call the given function and pass the value inside the given `Just` to it.
+
+[Can you write this?]
 
 ---
 
+# One version
+
+I named it `Maybe'` so that Haskell would not complain about name conflicts.
+
+```haskell
+instance Monad Maybe' where 
+    return = pure -- remind me what this is for?
+    Nothing' >>= _ = Nothing'
+    Just' x >>= f = f x 
+```
+(remember, if you do this yourself, `Maybe'` must also be an `Applicative`, which means it must also be a `Functor`. Try to recall how to make it one of both.)
+
+Let's take a bit to understand this:
+    - If the thing to the left of the `>>=` is `Nothing'`, return `Nothing'`
+    - If the thing to the left of the `>>=` is `Just' x`, call the given function on the `x`.
+
+---
+
+# What if we want something even in failure?
+
+Sometimes, when some code fails, we don't just want `Nothing`, we want a proper error.
+
+That's what the `Either` monad is for.
+
+`Either` is a data type that stores one of two values:
+```haskell
+data Either a b = Left a | Right b
+```
+
+So an `Either Int String` could either be a `Left 20` or a `Right "hello"` among many other possibilities.
+
+So, how can `Either` be a `Functor` or `Applicative`?
+
+---
+
+# `Either` as a `Functor`
+
+What happens we use `Either` as a functor? ([Source](https://hackage-content.haskell.org/package/ghc-internal-9.1401.0/docs/src/GHC.Internal.Data.Either.html#line-135))
+
+```haskell
+instance Functor (Either a) where
+    fmap _ (Left x) = Left x
+    fmap f (Right y) = Right (f y)
+```
+
+First, notice that we didn't write `instance Functor Either`, we wrote `instance Functor (Either a)`. 
+
+Remember, a `Functor` must have kind `* -> *`. But `Either` has kind `* -> * -> *`. It takes two type arguments, i.e., `Either Int String`, not just `Either Int`.
+
+This brings us to the second point: the `a` type is the one we don't really care about. `Right` is the "good" constructor, for non-error values (because it's "right", i.e., correct). `Left` is the constructor for errors. So if it's left, just return it, don't apply the function.
+
+---
+
+# `Either` as an `Applicative`
+
+```haskell
+instance Applicative (Either e) where
+    pure          = Right
+    Left  e <*> _ = Left e
+    Right f <*> r = fmap f r
+```
+
+([Source](https://hackage-content.haskell.org/package/ghc-internal-9.1401.0/docs/src/GHC.Internal.Data.Either.html#line-151)) 
+
+It works basically the same as `Maybe`, with `Left` taking the place of `Nothing` and `Right` taking the place of `Just`. 
+
+If it's `Left`, we ignore the right hand side.
+
+If it's `Right f <*> Left x`, we end up returning `Left x` because of `fmap`.
+
+Only if it's `Right f <*> Right x` do we return `Right $ f x`
+
+---
+
+# `Either` as a `Monad`
+
+As a monad, `Either`'s bind is pretty much the same as `Maybe`.
+
+If it's `Left`, we return that. We ignore everything after it.
+If it's `Right`, we feed the value to the function and continue.
+
+Can you write it?
+```haskell
+instance Monad (Either a) where
+    return = pure
+    ???
+```
+
+---
+
+# `Either`'s bind
+
+```haskell
+instance Monad (Either a) where
+    return = pure
+    Left x >>= _ = Left x
+    Right x >>= f = f x
+```
+
+If there are a chain of `Either`s, it returns the first one that is `Left`. This gives you a way to early return with an error:
+
+```haskell
+Right 10 >> Left "Oops" >> Right 20 == Left "Oops" 
+```
+
+```haskell
+do -- if either function call returns Left, return that error.
+    result <- someFallablefunction
+    result2 <- someOtherFallablefunction result
+    return $ result2
+```
+
+---
+
+# Early return with `Either`
+
+With maybe, we could early return, but not provide an actual value.
+
+With either, we can early return anything. It's mainly intended for errors, since once an error happens you don't want to continue. 
+
+Let's make a password checker. If it's bad, it returns why.
+
+```haskell
+goodPassword :: String -> Either String ()
+goodPassword pwd = do
+    when (atLeastOneUpper pwd) (Left "Must have at least one uppercase letter")
+    when (atLeastOneLower pwd) (Left "Must have at least one lowercase letter")
+    when (atLeastOneSymbol pwd) ...
+```
+
+If we get through all the checks, we just end up with `Right ()`, indicating the password is good. But if we fail, we actually know why.
+
+---
+
+# Knowledge check
+
+1. Write a function named `divideAll :: [Double] -> Maybe Double` that takes a list of `Double`s and divides them over and over, so that `[1.0, 2.0, 3.0, 4.0] == Just $ 1.0 / 2.0 / 3.0 / 4.0`, however, if any but the first number is `0`, the result is `Nothing`. If the list is empty return `1.0`.
+
+2. Write that same function but have it return an `Either String Double` and have it return the message `"divide by zero"` in the event that there is a zero anywhere but in the first index.
+
+3. Write a Haskell program that reads a password and then applies the following checks: `atLeast12chars` and `atLeastOneDigit`. If a check fails, return a `Left` with an error message. If it succeeds, return the password.
+
+4. Refactor that program so that each check does only one thing and returns `Either`.
+
+---
+
+# Maybe/Either KC answers (1)
+
+```haskell
+divideAll :: [Double] -> Maybe Double
+divideAll [] = Just 1
+divideAll (x : xs) = do
+    when (0 `elem` xs) Nothing 
+    Just $ foldl' (/) x xs 
+
+divideAll' :: [Double] -> Either String Double
+divideAll' [] = Right 1
+divideAll' (x : xs) = do
+    when (0 `elem` xs) $ Left "divide by zero"
+    Right $ foldl' (/) x xs
+
+checkPassKc :: String -> Either String String
+checkPassKc str = do 
+    when (length str < 12) $ Left "must be at least 12 characters"
+    unless (any isDigit str) $ Left "must contain a digit"
+    Right str
+```
+
+---
+
+# Maybe/Either KC answers (2)
+
+```haskell
+checkLengthReq :: String -> Either String String
+checkLengthReq str = 
+    if length str < 12 
+        then Left "must be at least 12 characters"
+        else Right str 
+
+checkDigitReq :: String -> Either String String
+checkDigitReq str =
+    if not (any isDigit str)
+        then Left "must contain a digit"
+        else Right str
+
+checkPassKc' :: String -> Either String String 
+checkPassKc' str = do
+    checkLengthReq str 
+    checkDigitReq str
+    Right str
+```
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+
+---
+
+# Why are we doing this?
+
+So far we've seen several uses for monads:
+- The `IO` monad lets us describe computations that call external code and pipe the results to other computations that call external code.
+- The `Maybe` monad lets us early return if there's no useful result.
+- The `Either` monad lets us return errors.
+
+---
+
+# Why are we doing this? (2)
+
+Fundamentally, monads are about letting you add your own language as to how actions or statements are composed.
+
+Imagine if, in C, you could say "hey, every statement in this function, if it fails, I want you to make the whole thing fail"
+
+A monad is like a custom language. You describe how statements in the language are combined.
+
+So far, the monads we've seen have been pretty tame. Now we're going to see some that *really* add features to the language. In particular, non-determinism, logging, dependency injection, stateful programming, as well as how to combine monads.
+
+---
+
+# The list monad
+
+It might surprise you to learn that `[]` is a monad. That's right, good old lists. But how?
+
+The instance looks like this:
+```haskell
+instance Monad ([]) where
+    return = pure -- same as []
+    l >>= f = concat $ map f l -- or concatMap f l
+                               -- or [y | x <- l, y <- f x] (official)
+```
+
+What does that do?
+
+---
+
+# It generates every combination
+
+If we do `[1, 2, 3] >>= (\x -> [x, x, x])` we get: `[1, 1, 1, 2, 2, 2, 3, 3, 3]`
+
+This is what happens:
+1. We run the function on every element of the original list:
+   `[[1, 1, 1], [2, 2, 2], [3, 3, 3]]`
+2. Then we flatten the lists of lists into a single list with `concat`: `[1,1,1,2,2,2,3,3,3]`
+
+But why would it work that way?
+
+---
+
+# It models non-determinism
+
+Let's consider a problem. This is a Knight on a chessboard:
+
+```
+. . . . . . . .
+. . * . * . . .
+. * . . . * . . 
+. . . N . . . .
+. * . . . * . .
+. . * . * . . .
+. . . . . . . .
+. . . . . . . .
+```
+
+The "N" is the knight (K means king, so we use N to disambiguate). 
+
+The start (*) represent all the places the knight is legally allowed to move in one turn.
+
+(The unicode characters for the chess piece and the board tiles weren't rendering correctly, so bear with me.)
+
+---
+
+# The goal
+
+The objective is to determine all the places the knight could be after `n` turns. 
+
+Here are some answers. You already saw one turn. What about two?
+
+```
+* - * - * - * -
+- - - * - - - *
+* - * - * - * -
+- * - N - * - *
+* - * - * - * -
+- - - * - - - *
+* - * - * - * -
+- * - * - * - -
+```
+
+Take a moment to convince yourself that those stars really do represent places the knight can move after exactly two moves. (we can whiteboard it or open Lichess).
+
+How can we do this using the list monad?
+
+---
+
+# Some preliminaries 
+First, let's write some functions to generate a list of valid moves:
+```haskell
+inBounds :: Int -> Int -> Bool 
+inBounds file rank =
+    rank >= 1 && rank <= 8 &&
+    file >= 1 && file <= 8  
+validMoves :: Int -> Int -> [(Int, Int)]
+validMoves file rank =
+    filter (uncurry inBounds) [
+        (file - 1, rank + 2),
+        (file + 1, rank + 2),
+        (file + 2, rank + 1),
+        (file + 2, rank - 1),
+        (file + 1, rank - 2),
+        (file - 1, rank - 2),
+        (file - 2, rank - 1),
+        (file - 2, rank + 1)
+    ]
+```
+
+---
+
+# The key function
+
+This is the main function that determines where a knight can go. This is the first time where we use the list as a monad:
+
+```haskell
+knightCanGo :: Int -> Int -> Int -> [(Int, Int)]
+knightCanGo file rank 0 = [(file, rank)]
+knightCanGo file rank turns = do
+    (file', rank') <- validMoves file rank
+    knightCanGo file' rank' (turns - 1)
+```
+
+We use the monad in the second definition, with `do` notation.
+
+We generate a list with `validMoves`. However, `(file', rank')` is not a list. It's an individual `(file, rank)`. The code after that runs for every *element* of the list.
+[let's dwell on how this works]
