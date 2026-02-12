@@ -929,11 +929,30 @@ This is the main function that determines where a knight can go. This is the fir
 knightCanGo :: Int -> Int -> Int -> [(Int, Int)]
 knightCanGo file rank 0 = [(file, rank)]
 knightCanGo file rank turns = do
-    (file', rank') <- validMoves file rank
-    knightCanGo file' rank' (turns - 1)
+    (file', rank') <- validMoves file rank -- for each valid move ...
+    knightCanGo file' rank' (turns - 1) -- concatenate all the places it can go
 ```
 
 We use the monad in the second definition, with `do` notation.
 
 We generate a list with `validMoves`. However, `(file', rank')` is not a list. It's an individual `(file, rank)`. The code after that runs for every *element* of the list.
 [let's dwell on how this works]
+
+---
+
+# What?
+
+In the list monad, every line of the `do` multiplies the list.
+
+```haskell
+do { [0,0,0] ; [1,1,1] }
+[1,1,1,1,1,1,1,1,1]
+```
+
+
+
+
+```haskell
+do { [0,0,0]; [0,0,0]; [1,1,1] } ==
+[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+```
