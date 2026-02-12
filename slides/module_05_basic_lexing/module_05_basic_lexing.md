@@ -37,7 +37,7 @@ We could specify a formal grammar (and we will), but for now, let's get a "feel"
 
 The language we'll be working with is called [Lisp](https://en.wikipedia.org/wiki/Lisp_(programming_language)), which stands for "List Processor", but sometimes detractors say it stands for "lots of irritating, superfluous parentheses".
 
-Lisp is an extremely influential language, and is still widely used today, mainly as a scripting language (used in [Emacs](https://en.wikipedia.org/wiki/Emacs_Lisp), [AutoCAD](https://en.wikipedia.org/wiki/AutoLISP), and [Audacity](https://en.wikipedia.org/wiki/Audacity_(audio_editor)#Customizability_and_extensibility)), but also as a full-on programming language ([Common Lisp](https://lisp-lang.org/), [Scheme](https://www.scheme.org/), [Racket](https://racket-lang.org/), [Clojure](https://clojure.org/))
+Lisp is an extremely influential language, and is still widely used today, mainly as a scripting language (used in [Emacs](https://en.wikipedia.org/wiki/Emacs_Lisp), [AutoCAD](https://en.wikipedia.org/wiki/AutoLISP), and [Audacity](https://en.wikipedia.org/wiki/Audacity_(audio_editor)#Customizability_and_extensibility)), but also as a full-on programming language ([Common Lisp](https://lisp-lang.org/), [Scheme](https://www.scheme.org/), [Racket](https://racket-lang.org/), [Clojure](https://clojure.org/), [Fennel](https://fennel-lang.org/))
 
 ---
 
@@ -177,7 +177,7 @@ With LLMs in English, a token is one or more letters, like "-tion". Words are bu
 
 In formal languages, we rarely break down "words" into sub-words. Most programming languages are highly analytic, meaning that they can be broken down into tiny "words" that mean very exact things, rather than grouping lots of related thoughts into one word.
 
-Most "words" from a programming language perspective are either operators, functions, or values.
+Most "words" from a programming language perspective are either operators, functions, variables, or values.
 
 ---
 
@@ -390,7 +390,7 @@ The same token values we enumerated in the data declaration earlier.
 For example: 
 ```haskell
 tokenize "(print \"hello\" (+ 2 2))" ==
-    [Lp, StrLit "hello", Lp, Sym "+", IntLit 2, IntLit 2, Rp, Rp]
+    [Lp, Sym "print", StrLit "hello", Lp, Sym "+", IntLit 2, IntLit 2, Rp, Rp]
 ```
 
 ---
