@@ -265,6 +265,144 @@ But first...
 
 ---
 
+# The quiz
+
+Your upcoming quiz will only focus on the `IO` monad.
+
+For the upcoming test and final, we will broaden that to other monads: `Maybe`, `Either`, `List`, `Writer`, `Reader`, or a custom monad that you or I define.
+
+You will not be tested on the state monad or on monad transformers (covered soon).
+
+The quiz will ask you to write a Haskell program to do some `IO`.
+
+Let's do some practice quizzes for the `IO` monad.
+
+---
+
+# Practice Quiz 1
+
+Write a Haskell function that takes a list of names, and prints the canonical lyrics of the song "Who stole the cookies from the cookie jar?".
+
+One verse goes like this:
+```
+Chorus: Who stole the cookies from the cookie jar?
+Accuser: [person 0] stole the cookies from the cookie jar!
+[person 0]: Who, me!?
+Chorus: Yes, you!
+[person 0]: Couldn't be!
+Chorus: Then who!? 
+```
+
+After the verse, the next verse has `[person 1]` instead of `[person 0]`. Verse 3 will have `[person 2]`. The verses continue until the list of people is empty.
+
+Include the types of all functions you define.
+
+---
+
+# Practice Quiz 1 answers
+
+```haskell
+cookieInvestigationNotesOneVerse :: String -> IO ()
+cookieInvestigationNotesOneVerse name = do
+    putStrLn "Chorus: Who stole the cookies from the cookie jar?"
+    putStrLn $ "Accuser: " ++ name ++ " stole the cookies from the cookie jar!"
+    putStrLn $ name ++ ": Who, me!?"
+    putStrLn "Chorus: Yes, you!"
+    putStrLn $ name ++ ": Couldn't be!"
+    putStrLn "Chorus: Then who!?"
+
+cookieInvestigationNotes :: [String] -> IO ()
+cookieInvestigationNotes names = 
+    names `forM_` cookieInvestigationNotesOneVerse
+```
+
+Suggestion: rewrite this to use only one function. Instead of `cookieInvestigationNotesOneVerse`, use a lambda function. Notice how similar it looks to an imperative language. Now write it with `mapM_`. Can you make it point free?
+
+---
+
+# Practice Quiz 2
+
+Write a Haskell program (consisting of at least `main`) in which:
+- The program asks the user to input a non-negative integer 
+- Use `readMaybe :: Read a => String -> Maybe a` to convert the `getLine` input into an integer.
+- If the given input is not a valid integer (`readMaybe` returns `Nothing` or it's not non-negative), ask again. Keep asking until it is valid.
+- Print all of the squared natural numbers that are less than or equal to the number the user provides. Print each one per line. 
+
+So if the user enters `10`, the result would be `1`, `2`, `4`, `9`, all on separate lines. 
+
+Include types on all functions you define, including `main`.
+
+---
+
+# Practice quiz 2 answers
+
+```haskell
+readNat :: IO Int
+readNat = do 
+    line <- getLine
+    let result = readMaybe line :: Maybe Int
+    let onError = putStrLn "invalid. must be int >= 0." >> readNat
+    case result of 
+        Nothing -> onError
+        Just x -> if x >= 0 then return x
+                  else onError
+
+squares = (^2) <$> [1..]
+
+main :: IO ()
+main = do 
+    beneath <- readNat
+    let squaresBeneath = takeWhile (<= beneath) squares
+    forM_ squaresBeneath print 
+```
+
+---
+
+# Practice quiz 2 commentary
+
+I got a little fancy with this one. Originally I repeated `putStrLn "error. must be int >= 0."` for both the `Nothing` case and the `else` branch. 
+
+`onError` is not a function, it's an action. I create it by composing a `putStrLn` with the action I'm defining (`readNat`).
+
+This action has type `IO Int`, which is why I'm allowed to return it. I'm returning an action that says "print an error message and then run the same action again".
+
+---
+
+# Practice quiz 3
+
+Write a Haskell program that reads an input `n` (you may assume it's a valid natural number) 
+
+Then it will draw a sideways pyramid of `#`s with the longest span having `n`. 
+
+For example, if `n = 3`, this pyramid will be drawn:
+```
+#
+##
+###
+##
+#
+```
+
+You must use one of `forM`, `forM_`, `mapM`, or `mapM_`. Include types of all functions.
+
+---
+
+# Practice quiz 3 answer
+
+```haskell
+main :: IO ()
+main = do 
+    n <- (read <$> getLine) :: IO Int
+    forM_ ([1..n] ++ reverse [1..(n - 1)]) (\l ->
+        putStrLn $ l `stimes` "#" 
+     )
+
+```
+
+This one was shorter because I remembered that strings are monoids, so I could use `stimes` to generate the string. If you made a function that did that instead, program would be a little longer.
+
+---
+
 # Questions?
 
 <!-- _class: invert questions -->
@@ -945,14 +1083,157 @@ We generate a list with `validMoves`. However, `(file', rank')` is not a list. I
 In the list monad, every line of the `do` multiplies the list.
 
 ```haskell
-do { [0,0,0] ; [1,1,1] }
-[1,1,1,1,1,1,1,1,1]
+do { [0,0,0] ; [1,1,1] } == [1,1,1,1,1,1,1,1,1]
 ```
 
-
-
+For every zero, we're producing [1,1,1], and they get concatenated.
 
 ```haskell
-do { [0,0,0]; [0,0,0]; [1,1,1] } ==
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+do { [0,0,0]; [1,1,1]; [2,2,2] } ==
+[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2]
 ```
+
+Now there are 27 `2`s. For each `0`, we are pairing up three `1`s. By itself, that would produce `[1,1,1,1,1,1,1,1,1]`. We are then pairing each `1` up with `[2,2,2]`. So there are 9 * 3 = 27 `2`s.
+
+But that's just a fancy way of multiplying the list. we could easily just do ``9 `stimes` [2,2,2]``. That would also give 27 `2`s. So why?
+
+---
+
+# Why?
+
+The main value of `List` being a `Monad` is that we can actually use the values inside of it to produce new values. 
+
+When we use the bind operation, the rest of the monad runs for every element:
+```haskell
+do { x <- [1,2,3] ; [x,x,x] } :: [Int] == [1,1,1,2,2,2,3,3,3]
+```
+
+This ends up being like:
+1. First, let `x` be `1`, generate `[1,1,1]`
+2. Then, let `x` be `2`, generate `[2,2,2]`
+3. Then, let `x` be `3`, generate `[3,3,3]`
+4. Finally, take `[[1,1,1], [2,2,2], [3,3,3]]` and concatenate.
+
+---
+
+# Filtering with the list monad
+
+What if we had an if-expression to determine if we wanted to combine a list or not?
+
+```haskell
+do { x <- [1..10] ; if even x then [x] else [] } == [2,4,6,8,10]
+```
+
+This will give us only the even numbers. 
+
+Compare with this:
+```haskell
+[ x | x <- [1..10], even x] == [2,4,6,8,10]
+```
+
+Lists as monads might be easier to understand if you think of them as just a shortcut for `do` notation that doesn't automatically concatenate.
+
+---
+
+# Compare with list comprehensions
+
+They are pretty similar.
+
+Fun fact: in early Haskell versions (between 1997 and 1999) you could use list comprehensions with any Monad*. It sounds like it was just a variant of `do` notation.
+
+I left a citation because the history of Haskell is rather interesting.
+
+<small><small>
+\* Paul Hudak, John Hughes, Simon Peyton Jones, and Philip Wadler. 2007. A history of Haskell: being lazy with class. In Proceedings of the third ACM SIGPLAN conference on History of programming languages (HOPL III). Association for Computing Machinery, New York, NY, USA, 12–1–12–55. https://doi.org/10.1145/1238844.1238856
+</small></small>
+
+---
+
+# Random note about `<-`
+
+Anytime we use the `<-`, from a type perspective, we're "peeling off" one layer of monad.
+
+So:
+```haskell
+someList :: [(Int, Int, Int)]
+someList = do 
+    x <- someOtherList -- some other list is [Int]
+                       -- but x is an Int.
+    return (x, x, x)
+```
+
+For another monad: `getLine :: IO String`, in `do { x <- getLine; ... }`, `x` is a `String`. `<-` is the closest thing we have to "getting the value out" of a monad. Alternatively `>>=`. 
+
+
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
+# Writing things out
+
+In class you may have seen me use `trace` or `traceShow` to print debugging output.
+
+This is a kind of non-functional escape hatch that lets us do print debugging. 
+
+Sometimes, it's just really useful to be able to do that but we actually want to use the thing that we wrote. 
+
+For example, sometimes it really is nice to be able to be able to track a list of things in a "stateful" way (i.e., pushing onto the list). And because of monads, we don't have to give that up.
+
+Specifically ,the `Writer` monad lets us do this.
+
+---
+
+# The writer monad ([link](https://hackage-content.haskell.org/package/transformers-0.6.3.0/docs/Control-Monad-Trans-Writer-Lazy.html))
+
+```haskell
+newtype Writer w a = Writer { runWriter :: (a, w) } 
+
+instance Monoid w => Monad (Writer w) where 
+    return = pure -- we'll show the applicative instance in a second
+
+    (Writer (a, w)) >>= f = 
+        let Writer (b, w') = f a 
+        in  Writer (b, w <> w')
+```
+
+(note: We can construct a Writer directly with `Writer (20, "hello")`, we don't have to write `Writer { runWriter = (20, "hello" }`. Record syntax allows this as a shortcut.)
+
+(note2: this isn't the real source code. `Writer` is actually defined in terms of `WriterT`, which is a monad transformer. We'll talk about those in a bit. This is how it would work without monad transformers, though.)
+
+---
+
+# The writer monad (2)
+
+Fundamentally, `Writer` is just a random value (type `a`) together with a monoid (`w`).
+
+The monoid is used to accumulate "logged" values. The `a` is just...whatever you want it to be.
+
+So if a function returns a `Writer String Int`, that means it really returns a `(Int, String)` (the order is swapped in the record).
+
+So what's the point? Why would we write a function to have this type:
+`someFunction :: Int -> Int -> Writer String Int`
+
+instead of this:
+`someFunction :: Int -> Int -> (Int, String)
+
+?
+
+---
+
+# Because of Bind
+
+
+
+---
+
+# Chaining computations
+
+
+---
+
+First, `import Control.Monad.Writer.Lazy`
