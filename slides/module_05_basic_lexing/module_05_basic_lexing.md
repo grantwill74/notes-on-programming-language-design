@@ -622,7 +622,7 @@ But that also means we can't easily work with this list. If we print it, the pro
 
 # Take (2)
 
-Enter `take`. This is a simple functional operator that takes a certain number of elements from a list. 
+Enter `take`. This is a simple function that takes a certain number of elements from a list. 
 
 `print $ take 10 natSquares`
 
@@ -1052,7 +1052,7 @@ For `foldl`, the starting value is the left-most value, so it's the first value 
 
 # `foldl` example (2)
 
-`((((0 + length "hey") + length "there") + length "hi") + length "there)`
+`((((0 + length "hey") + length "there") + length "hi") + length "there")`
 First, `l == 0` and `r == "hey"`. Then the binary function adds `l` to the length of `r`, and the new value of `l == 3`. Then we add  `l + length "there" == 3 + 5 == 8`, and that becomes the new `l`. Then we add `8 + length "hi" == 8 + 2 == 10` and that becomes the new `l`. Finally we add `10 + length "there"` to finish up with `15`.
 
 ---
