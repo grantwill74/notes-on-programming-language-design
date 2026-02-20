@@ -1211,7 +1211,7 @@ instance Monoid w => Monad (Writer w) where
 
 Fundamentally, `Writer` is just a random value (type `a`) together with a monoid (`w`).
 
-The monoid is used to accumulate "logged" values. The `a` is just...whatever you want it to be.
+The monoid is used to accumulate "logged" values. The `a` is just...whatever you want it to be. The `a` does not have to interact with `w` at all. 
 
 So if a function returns a `Writer String Int`, that means it really returns a `(Int, String)` (the order is swapped in the record).
 
@@ -1219,7 +1219,7 @@ So what's the point? Why would we write a function to have this type:
 `someFunction :: Int -> Int -> Writer String Int`
 
 instead of this:
-`someFunction :: Int -> Int -> (Int, String)
+`someFunction :: Int -> Int -> (Int, String)` or even `Int -> Int -> Int`
 
 ?
 
@@ -1227,13 +1227,236 @@ instead of this:
 
 # Because of Bind
 
+Because when we bind a writer with the result of a function, we combine the monoids:
+
+```haskell
+(Writer (a, w)) >>= f = 
+    let Writer (b, w') = f a 
+    in  Writer (b, w <> w')  -- remember, <> combines monoids
+```
+
+The basic idea of `Writer` is: "this is an ordinary value but it also has a log or accumulator or something with it"
+
+We `import Control.Monad.Writer.Lazy` to get access to the `Writer` monad.
+
+---
+
+# `tell`
+
+`tell :: Writer w m => w -> m ()`
+It's a function that takes a monoid `w`, and produces a `Writer` with that monoid in it.
+
+If you sequence two `Writer`s, from the `>>=` implementation, you can see that their monoids get combined with `<>`.
+
+So this prints `6`: 
+```haskell
+import Control.Monad.Writer.Lazy
+someWriter :: Writer (Sum Int) ()
+someWriter = do
+    tell (Sum 1)
+    tell (Sum 2)
+    tell (Sum 3)
+
+-- the snd is because runWriter returns the result () and the sum
+main = print $ getSum $ snd $ runWriter someWriter
+```
+
+---
+
+# `Writer` for logging
+
+What about that initial idea? Logging? It's easy, because `String` is already a `Monoid`.
+
+```haskell
+someCalculationWithLogging :: Int -> Writer String Int 
+someCalculationWithLogging start = do 
+    let x = start * 2 
+    tell $ "doubling start to get " ++ show x ++ "...\n"
+    let y = x + 1
+    tell $ "adding 1 to get " ++ show y ++ "...\n"
+    let z = y * 3
+    tell $ "tripling to get " ++ show z ++ "...\n"
+    tell $ "final result: " ++ show z ++ "\n"
+    return z 
+main = do putStrLn $ snd $ runWriter $ someCalculationWithLogging 2
+```
+Caution: remember that evaluation is lazy. Just because we compute `x` and then log does not mean the log happened after. In this case, we forced it with `x` in the log.
+
+---
+
+
+# Imperative sum with `Writer`
+
+Remember how we learned about `foldl`? And how we could write `sum = foldl (+) 0`? That's nice, but if you really wanted to do it the imperative way, you could.
+
+```haskell
+imperativeSum :: [Int] -> Int
+imperativeSum list = 
+  let (_, Sum result) = runWriter $ 
+       forM_ list (\item ->
+        tell (Sum item)
+       ) 
+  in result 
+```
+
+`runWriter` gets the monoid and result (which is `()`) out of the `Writer`. But what about `tell`? `tell` is the function that let's us "write to" the `Writer`. If we say `tell (Sum 2)`, we're adding `2` to the existing `Sum` monoid.
+
+---
+
+# `MonadWriter`
+
+If you actually type `:t tell` into `ghci`, you actually get this type:
+`tell :: MonadWriter w m => w -> m ()`
+
+`MonadWriter` is a typeclass that is a `Monad`. `Writer` is an instance of `MonadWriter`.
+
+Why? Because there is something called `WriterT`, which is something called a "monad transformer". Both `Writer` and `WriterT` are instances of `MonadWriter`. 
+
+We'll talk more about them towards the end of this module.
+
+For now, just note that if you see a typeclass `MonadWriter`, `Writer` will work. Likewise, `MonadIO` has `IO` as an instance. 
+
+---
+
+# Remember that monads are wrappers
+
+A `Writer String Int` is a writer that will do some computations, which will log or write to a `String`, and then return an `Int`.
+
+The first value is the monoid that we're `tell`ing to. 
+
+The second value is the result of the computation.
+
+This is true of every monad: the last value in its type is the "return" value. It's the result. If you write `return 7`, you will create a monad that has that value in its "return slot". 
+
+So think of 
+
+---
+
+# Knowledge Check
+
+1. Write a function with the type `String -> Writer [Int] ()`, where the monoid stores the index of each `'a'` in the string.
+
+2. Rewrite that function to not use Writer, and to have a type `String -> [Int]`.
+
+3. Now, go back to using writer, but use `runWriter` to get the monoid out of the writer and return it, so that the signature is `String -> [Int]` like in problem 2.
+
+4. Compare and contrast. Which did you find easiest? Did you notice any similarities?
+
+---
+
+# Writer knowledge check answers
+
+```haskell
+aIndices :: String -> Writer [Int] ()
+aIndices str = do 
+    forM_ (zip [0..] str) (\(i, c) -> 
+         when (c == 'a') (tell [i])
+     )
+```
+
+```haskell
+aIndices' :: String -> [Int]
+aIndices' str = fst <$> filter ((== 'a') . snd) (zip [0..] str )
+-- or
+aIndices' str = fst <$> filter (\(i, c) -> c == 'a') (zip [0..] str)
+```
+
+```haskell
+aIndices'' :: String -> [Int]
+aIndices'' str = execWriter $ -- execWriter means (snd . runWriter)
+    forM_ (zip [0..] str) 
+        (\(i, c) -> when (c == 'a') (tell [i]))
+```
+
+---
+
+# Writer knowledge check compare and contrast
+
+First, make up your own mind! 
+
+Don't read on until you have thought about it and formed an opinion.
+
+It's important to practice doing this. Make a hypothesis, then test it. Make an opinion, then evaluate it. Don't read passively and wait for me to tell you what to think. Your opinion is valid too, and it might be different than mine.
+
+---
+
+# Writer knowledge check compare and contrast (2)
+
+My opinion is that both are readable, but I prefer the non-writer way as long as we use a lambda expression instead of the composition with `snd`.
+
+I like it because we can read from right to left. "Start with a `str`, then `zip` it with the natural numbers, then keep only the pairs with an `'a'`, then select only the first element of the pairs (the index). It's clear that it returns the indices.
+
+---
+
+# Compare and contrast (3)
+
+I don't hate the writer though, it is basically imperative. Compare:
+```python
+def aIndices(str):
+    result = []
+    for (i, c) in enumerate(str):
+        if c == 'a': result.append(i)
+    return result
+```
+```haskell
+aIndices'' :: String -> [Int]
+aIndices'' str = execWriter $ 
+    forM_ (zip [0..] str) 
+        (\(i, c) -> when (c == 'a') (tell [i]))
+```
 
 
 ---
 
-# Chaining computations
+# Writer summary
+
+Monads give you the ability to kind of extend the language. In this case, `Writer` gives us accumulator "result" values we can append or add to.
+
+A `Writer` is basically an `(a, w)`, where the `w` is a monoid, and the `a` is whatever you want it to be.
+
+A function that returns `-> Writer String Int` is very similar to a function that returns `-> (Int, String)`.
+
+However, if we put a `Writer String a` besides a `Writer String b` in a `do` block, the compiler will automatically `++` the two strings together.
+
+---
+
+# Writer summary (2)
+
+If we want to manually concat some data to the writer, we can use `tell`.
+
+`tell` will take a monoid and `<>` it with whatever is in the current writer we are building (often in a `do` block).
+
+To get the monoid out of the writer, we can use `execWriter`.
+
+Remember, a `Writer` is a wrapper around an `(a, w)`. `runWriter` pulls that tuple out. `snd . runWriter` pulls the `w` out of the tuple. `execWriter = snd . runWriter`
+
+---
+
+# Questions?
+
+<!-- _class: invert questions-->
+
+---
+
+# Monad Transformers
+
+Monad transformers add functionality to other monads. For example, if you wanted a writer with early return functionality, you could use `WriterT (Maybe (Int, String))`, which is a `Maybe` monad that also supports `tell`. 
+
+This is a common pattern in Haskell. There's also a `MaybeT` to add early return capability to another monad. We can use transformers to layer on functionality.
+
+---
+
+# Monad Transformers again
+
+Monad transformers are a complex topic, and a little too advanced for me to feel comfortable requiring them. However, they are important for practical Haskell programming. 
+
+If you plan on actually building a real software system in Haskell, I've heard people say your first step is creating a monad transformer stack (I haven't tried real Haskell software engineering, but it does sound fun.)
+
 
 
 ---
 
-First, `import Control.Monad.Writer.Lazy`
+
+---
+
+First, 
