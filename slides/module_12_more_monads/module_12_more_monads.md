@@ -651,7 +651,7 @@ We don't need to use this value, it just needs to be here so we don't return, th
 
 `mapM` then inserts a `*>` in between each of those `Maybe`s. So if any of the parts of the ip address, the whole result is `Nothing`. Otherwise, the result is `Just [Word32, Word32, Word32, Word32]`
 
-`parsed <-` of a `Maybe [Word32, Word32, Word32, Word32]` will either skip the entire remainder of the `do` block and become `Nothing` the `Maybe` is `Nothing`, or `parsed` will become the list if it exists. This means that we early return automatically without an `if`.
+`parsed <-` of a `Maybe [Word32, Word32, Word32, Word32]` will either skip the entire remainder of the `do` block and become `Nothing` when the `Maybe` is `Nothing`, or `parsed` will become the list if it exists. This means that we early return automatically without an `if`.
 
 ---
 
@@ -955,7 +955,9 @@ Fundamentally, monads are about letting you add your own language as to how acti
 
 Imagine if, in C, you could say "hey, every statement in this function, if it fails, I want you to make the whole thing fail"
 
-A monad is like a custom language. You describe how statements in the language are combined.
+A monad is like a custom programming language. You describe how statements in the language are combined.
+
+In fact, sometimes people will use monads to define a "DSL" (domain specific language)
 
 So far, the monads we've seen have been pretty tame. Now we're going to see some that *really* add features to the language. In particular, non-determinism, logging, dependency injection, stateful programming, as well as how to combine monads.
 
@@ -1180,11 +1182,11 @@ In class you may have seen me use `trace` or `traceShow` to print debugging outp
 
 This is a kind of non-functional escape hatch that lets us do print debugging. 
 
-Sometimes, it's just really useful to be able to do that but we actually want to use the thing that we wrote. 
+Sometimes, it's just really useful to be able to do that but we actually want to use the thing that we wrote. But `trace` won't let us access the string: that would violate functional purity.
 
-For example, sometimes it really is nice to be able to be able to track a list of things in a "stateful" way (i.e., pushing onto the list). And because of monads, we don't have to give that up.
+But sometimes it really is nice to be able to be able to track a list of things in a "stateful" way (i.e., pushing onto the list). And because of monads, we don't have to give that up.
 
-Specifically ,the `Writer` monad lets us do this.
+Specifically, the `Writer` monad lets us do this.
 
 ---
 
@@ -1410,7 +1412,7 @@ aIndices'' str = execWriter $
 
 # Writer summary
 
-Monads give you the ability to kind of extend the language. In this case, `Writer` gives us accumulator "result" values we can append or add to.
+Monads give you the ability to kind of extend the language. In this case, `Writer` gives us *write-only* accumulator "result" values we can append or add to.
 
 A `Writer` is basically an `(a, w)`, where the `w` is a monoid, and the `a` is whatever you want it to be.
 
@@ -1426,6 +1428,10 @@ If we want to manually concat some data to the writer, we can use `tell`.
 
 `tell` will take a monoid and `<>` it with whatever is in the current writer we are building (often in a `do` block).
 
+If all of the values you want to `<>` follow a pattern, you probably don't need `Writer`. But if they are irregular (like logging messages), `Writer` and `tell` can be very useful.
+
+It's also useful when doing the equivalent of a `for` loop with an accumulator.
+
 To get the monoid out of the writer, we can use `execWriter`.
 
 Remember, a `Writer` is a wrapper around an `(a, w)`. `runWriter` pulls that tuple out. `snd . runWriter` pulls the `w` out of the tuple. `execWriter = snd . runWriter`
@@ -1435,6 +1441,114 @@ Remember, a `Writer` is a wrapper around an `(a, w)`. `runWriter` pulls that tup
 # Questions?
 
 <!-- _class: invert questions-->
+
+---
+
+# Readers
+
+So there's a `Writer` monad. Is there a `Reader`?
+
+Yup. Instead of a `tell` function we use to write to a write-only value, we use `ask` to retrieve a read-only value.
+
+Here's a simple example:
+```haskell
+import Control.Monad.Reader -- no need for .Lazy. Reader is always lazy. 
+greetUser :: Reader String String
+greetUser = do 
+    name <- ask
+    return $ "hello, " ++ name ++ "!\n"
+```
+
+`greetUser` represents a computation that will produce a `String`, but which depends on a `String`. It's very similar to a `String -> String`, but the first argument is produced with `ask`.
+
+---
+
+# Why `Reader`?
+
+Let's see some more code to maybe understand why a bit better:
+
+```haskell
+waitingForUser :: Reader String String
+waitingForUser = do 
+    name <- ask 
+    return $ "waiting for " ++ name ++ " to respond...\n"
+logUser :: Reader String String
+logUser = do 
+    name <- ask
+    return $ "user " ++ name ++ " is registered.\n"
+```
+
+These are two more `Reader`s. They print different messages based on whatever name they are given. `ask` is a monad that produces the name, given in the future (we don't know it yet).
+
+---
+
+# Why `Reader` (2)
+
+Here's a function where we use all the readers:
+
+```haskell
+loginMessage :: Reader String String 
+loginMessage = do 
+    greeting <- greetUser 
+    log <- logUser 
+    waiting <- waitingForUser
+    return $ greeting ++ log ++ waiting ++ "$>"
+```
+
+Notice, this still returns a `Reader`. At no point do we actually know the user's name. But we are able to cleanly produce a prompt that will work when we provide the name at some point in the future.
+
+---
+
+# Finishing it up
+
+Here's the code that actually finally prints the prompt. Here, we use `runReader`, which lets us provide a name:
+
+```haskell
+main = putStrLn $ runReader loginMessage "alice"
+```
+
+This prints:
+```
+hello, alice!
+user alice is registered.
+waiting for alice to respond...
+$>
+```
+
+---
+
+# Really, why though?
+
+The reader monad is a little weird in that most of its useful value comes from composition, rather than `do` notation. This does the same thing as `loginMessage`:
+```haskell
+loginMessage' :: Reader String String 
+loginMessage' = 
+    concat <$> sequence [ greetUser, logUser, waitingForUser, pure "$>" ]
+```
+
+
+
+
+---
+
+# Reader source
+
+```haskell
+data Reader r a = Reader { runReader :: (r -> a) }
+instance Functor (Reader r) where
+    fmap f (Reader g) = Reader (f . g) -- just apply f to the result
+instance Applicative (Reader r) where
+    pure a = Reader (const a) -- a reader that ignores its read value
+    Reader f <*> Reader x = Reader (\r -> f r $ x r)
+instance Monad (Reader r) where
+    return = pure
+    m >>= f = Reader $ \r -> runReader (f (runReader m r)) r
+    -- ^^ here we create a new reader that first runs the old one and then 
+    -- runs the function on the result, creating a new reader
+```
+It's just a wrapper around a function. It lets us chain a bunch of a compositions that all need to use the same value (called `r`).
+
+(Note, again, in actuality, `Reader` is defined in terms of `ReaderT`, but its definition is equivalent to what I have above.)
 
 ---
 
