@@ -226,7 +226,7 @@ In fact, I could have just written this: `mapM_ (putStrLn . fizzify) [1..100]`
 
 If we used `mapM`, we'd have an `IO [...]` that would print everything and return the list of strings. We don't want the list of strings because `main :: IO ()` not `main :: IO [String]`, so we use `mapM_`.
 
-However, let's look at that Haskell again and notice how *similar* it looks to Python, despite seeming really weird...
+However, let's look at that Haskell again and notice how *similar* it looks to Python, despite seeming really weird at first...
 
 ---
 
@@ -1489,8 +1489,8 @@ Here's a function where we use all the readers:
 ```haskell
 loginMessage :: Reader String String 
 loginMessage = do 
-    greeting <- greetUser 
-    log <- logUser 
+    greeting <- greetUser  -- "run" the reader monad and get the result. 
+    log <- logUser -- these monads *automatically* have the string passed to them
     waiting <- waitingForUser
     return $ greeting ++ log ++ waiting ++ "$>"
 ```
