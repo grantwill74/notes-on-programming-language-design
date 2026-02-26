@@ -399,7 +399,7 @@ main = do
 
 ```
 
-This one was shorter because I remembered that strings are monoids, so I could use `stimes` to generate the string. If you made a function that did that instead, program would be a little longer.
+This one was shorter because I remembered that strings are monoids, so I could use `stimes` to generate the string. If you made a function that did that instead, the program would be a little longer.
 
 ---
 
@@ -427,11 +427,11 @@ What does that mean it can do?
 
 Monads are things that can *bind*. Bind is written `>>=`.
 
-Bind means "based on the result of the previous program, use this function to create a new program."
+Bind means "based on the result of the previous program, use this function to create a new program that will be combined with the existing program."
 
 So the question we ask about unfamiliar monads: what do they do as programs? What happens when we bind them?
 
-Think of bind as if, in C, you could redefine what a semicolon means. You could make it, for example, check the result of the previous operation to change based on what it returned. This is why monads are such a powerful pattern: they are programmable semicolons.
+Think of bind as if, in C, you could redefine what a semicolon means. You could make it, for example, check whether the previous operation was successful to change based on what it returned. This is why monads are such a powerful pattern: they are programmable semicolons. They let you create your own language within Haskell.
 
 So what does `Maybe`'s bind do?
 
@@ -607,6 +607,8 @@ Anyway, Haskell doesn't have built-in early-returns from functions.
 
 One of the programming-design reasons is that they would break [*compositionality*](https://en.wikipedia.org/wiki/Principle_of_compositionality), which is the feature that the meaning of an expression is only determined by the meanings of its subexpressions and the combining syntax. Early returns are like a goto that do something based on the surrounding environment rather than representing a meaningful expression by themselves.
 
+Early returns always return from the current function, so if we wrapped them into a sub-function to refactor, the behavior of our program would change.
+
 You might have thought it was because of lazy evaluation, but there's actually no reason we can't have lazy evaluation and early returns. Actually, many functional programming languages with eager evaluation also don't support early returns for the reason above.
 
 
@@ -680,6 +682,8 @@ Remember that `pure` is just a constructor for `Applicatives`. For the `Maybe` a
 
 Now we can do this:
 `when (length /= 4) Nothing`
+
+Practice: can you define a function `abortIf` which takes a predicate and early returns from a `Maybe` if the predicate is true? Give its type and definition.
 
 
 ---
@@ -757,6 +761,12 @@ Let's take a bit to understand this:
 
 ---
 
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
 # What if we want something even in failure?
 
 Sometimes, when some code fails, we don't just want `Nothing`, we want a proper error.
@@ -776,7 +786,7 @@ So, how can `Either` be a `Functor` or `Applicative`?
 
 # `Either` as a `Functor`
 
-What happens we use `Either` as a functor? ([Source](https://hackage-content.haskell.org/package/ghc-internal-9.1401.0/docs/src/GHC.Internal.Data.Either.html#line-135))
+What happens when we use `Either` as a functor? ([Source](https://hackage-content.haskell.org/package/ghc-internal-9.1401.0/docs/src/GHC.Internal.Data.Either.html#line-135))
 
 ```haskell
 instance Functor (Either a) where
@@ -859,7 +869,7 @@ With maybe, we could early return, but not provide an actual value.
 
 With either, we can early return anything. It's mainly intended for errors, since once an error happens you don't want to continue. 
 
-Let's make a password checker. If it's bad, it returns why.
+Let's make a password checker. If a password is bad, it returns why.
 
 ```haskell
 goodPassword :: String -> Either String ()
@@ -873,7 +883,7 @@ If we get through all the checks, we just end up with `Right ()`, indicating the
 
 ---
 
-# Knowledge check
+# Knowledge check for `Maybe` and `Either a`
 
 1. Write a function named `divideAll :: [Double] -> Maybe Double` that takes a list of `Double`s and divides them over and over, so that `[1.0, 2.0, 3.0, 4.0] == Just $ 1.0 / 2.0 / 3.0 / 4.0`, however, if any but the first number is `0`, the result is `Nothing`. If the list is empty return `1.0`.
 
@@ -953,7 +963,7 @@ So far we've seen several uses for monads:
 
 Fundamentally, monads are about letting you add your own language as to how actions or statements are composed.
 
-Imagine if, in C, you could say "hey, every statement in this function, if it fails, I want you to make the whole thing fail"
+Imagine if, in C, you could say "hey, for every statement in this function, if it fails, I want you to make the whole thing fail"
 
 A monad is like a custom programming language. You describe how statements in the language are combined.
 
@@ -1011,7 +1021,7 @@ The "N" is the knight (K means king, so we use N to disambiguate).
 
 The start (*) represent all the places the knight is legally allowed to move in one turn.
 
-(The unicode characters for the chess piece and the board tiles weren't rendering correctly, so bear with me.)
+(The unicode characters for the chess piece and the board tiles weren't rendering correctly, so please forgive the ASCII art.)
 
 ---
 
@@ -1082,7 +1092,7 @@ We generate a list with `validMoves`. However, `(file', rank')` is not a list. I
 
 # What?
 
-In the list monad, every line of the `do` multiplies the list.
+In the list monad, every line of the `do` multiplies the list (a cartesian product).
 
 ```haskell
 do { [0,0,0] ; [1,1,1] } == [1,1,1,1,1,1,1,1,1]
@@ -1110,11 +1120,12 @@ When we use the bind operation, the rest of the monad runs for every element:
 do { x <- [1,2,3] ; [x,x,x] } :: [Int] == [1,1,1,2,2,2,3,3,3]
 ```
 
-This ends up being like:
+After a `x <-`, we run the whole `do` block for each option for `x`. This ends up doing:
 1. First, let `x` be `1`, generate `[1,1,1]`
 2. Then, let `x` be `2`, generate `[2,2,2]`
 3. Then, let `x` be `3`, generate `[3,3,3]`
 4. Finally, take `[[1,1,1], [2,2,2], [3,3,3]]` and concatenate.
+
 
 ---
 
@@ -1133,13 +1144,12 @@ Compare with this:
 [ x | x <- [1..10], even x] == [2,4,6,8,10]
 ```
 
-Lists as monads might be easier to understand if you think of them as just a shortcut for `do` notation that doesn't automatically concatenate.
+Notice how similar list comprehensions are...
 
 ---
 
 # Compare with list comprehensions
 
-They are pretty similar.
 
 Fun fact: in early Haskell versions (between 1997 and 1999) you could use list comprehensions with any Monad*. It sounds like it was just a variant of `do` notation.
 
@@ -1194,8 +1204,8 @@ Specifically, the `Writer` monad lets us do this.
 
 ```haskell
 newtype Writer w a = Writer { runWriter :: (a, w) } 
-
-instance Monoid w => Monad (Writer w) where 
+        -- the 'w' is the type of the "log", the 'a' is the return type
+instance Monoid w => Monad (Writer w) where -- the log must be a monoid
     return = pure -- we'll show the applicative instance in a second
 
     (Writer (a, w)) >>= f = 
@@ -1211,7 +1221,7 @@ instance Monoid w => Monad (Writer w) where
 
 # The writer monad (2)
 
-Fundamentally, `Writer` is just a random value (type `a`) together with a monoid (`w`).
+Fundamentally, `Writer` is a return value (type `a`) together with a monoid (`w`).
 
 The monoid is used to accumulate "logged" values. The `a` is just...whatever you want it to be. The `a` does not have to interact with `w` at all. 
 
@@ -1238,6 +1248,8 @@ Because when we bind a writer with the result of a function, we combine the mono
 ```
 
 The basic idea of `Writer` is: "this is an ordinary value but it also has a log or accumulator or something with it"
+
+This accumulator is "write only". It's a monoid so we can just keep `<>` data to it, to grow the accumulator.
 
 We `import Control.Monad.Writer.Lazy` to get access to the `Writer` monad.
 
@@ -1526,7 +1538,10 @@ loginMessage' =
     concat <$> sequence [ greetUser, logUser, waitingForUser, pure "$>" ]
 ```
 
-
+Basically, it's useful when you have a bunch of functions that all take the same argument, such as:
+1. A database connection that is used in many places in a backend web app.
+2. Some configuration data that an app needs in many places.
+3. A group of global constants
 
 
 ---
@@ -1549,6 +1564,76 @@ instance Monad (Reader r) where
 It's just a wrapper around a function. It lets us chain a bunch of a compositions that all need to use the same value (called `r`).
 
 (Note, again, in actuality, `Reader` is defined in terms of `ReaderT`, but its definition is equivalent to what I have above.)
+
+---
+
+# Reader practice question
+
+Suppose we have these data types 
+```haskell
+data Db = HugeConnectionObject { ... }
+```
+
+1. Suppose we have 2 readers, `selectStudents :: Reader Db [String]` which gets the names of students, and `selectEmployees :: Reader Db [String]`. which gets the names of employees. 
+Write a `Reader`, `selectAllPeople :: Reader Db [String]`, which will combine both of the previous readers above. You may assume both lists are completely distinct.
+
+2. Suppose you actually have a `Db` named `db`. How can you provide this value to the reaader to actually get the `[String]` out of it?
+
+---
+
+# Reader practice answer
+1. 
+```haskell
+selectAllPeople :: Reader Db [String]
+selectAllPeople = do
+    students <- selectStudents
+    employees <- selectEmployees
+    return $ students ++ employees
+```
+
+or 
+
+```haskell
+selectAllPeople = concat <$> sequenceA [selectStudents, selectEmployees]
+```
+
+2. 
+```haskell
+main = do { db <- connectToDb ; let ppl = runReader selectAllPeople db ; ... }
+```
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
+# What if I need reading and writing?
+
+Cool, we can add write-only accumulators to the language with `Writer`. But we can't actually retrieve the value during the execution of the writer.
+
+And we can add global read-only data with `Reader`.
+
+But what if we want fully imperative code with a value that we can read *and* write.
+
+This brings us to what is IMO the hardest built-in `Monad`: `State`.
+
+Using this monad, we gain access to fully imperative code with some read/write state. 
+
+Does this require breaking the language? No. The state is treated in such a way that behind the scenes, everything is purely functional. However, we can pretend that there is read/write data.
+
+---
+
+# First: why?
+
+Remember that in our projects, we're making a programming language. 
+
+Sometimes, the interpretor/compiler itself has some data that needs to change.
+
+For example, consider the 
+
 
 ---
 
