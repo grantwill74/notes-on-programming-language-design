@@ -1618,7 +1618,7 @@ And we can add global read-only data with `Reader`.
 
 But what if we want fully imperative code with a value that we can read *and* write.
 
-This brings us to what is IMO the hardest built-in `Monad`: `State`.
+This brings us to what is IMO the most complex built-in `Monad`: `State`.
 
 Using this monad, we gain access to fully imperative code with some read/write state. 
 
@@ -1628,11 +1628,55 @@ Does this require breaking the language? No. The state is treated in such a way 
 
 # First: why?
 
-Remember that in our projects, we're making a programming language. 
+Let's imagine I have a programming language. It has this AST
 
-Sometimes, the interpretor/compiler itself has some data that needs to change.
+```haskell
+data Expr = If { cond :: Expr, true :: Expr, false :: Expr } |  
+            While { cond :: Expr, body :: Expr } |
+            Set { name :: String, value :: Expr } | ...
+```
 
-For example, consider the 
+Suppose I want to write the code to parse an `if` statement in my language. Maybe it looks something like:
+```
+if x == 20 then 
+    "it's 20"
+else 
+    "it wasn't 20"
+end
+```
+
+---
+
+# Writing the parser
+
+To parse an `if` expression in our language, we need to find the keyword `if`, followed by an expression, followed by `then` followed by another expression, followed by `else`, followed by yet another expression, followed by `end`.
+
+Here is a sketch of what it might look like:
+
+```haskell
+parseIf :: [Token] -> (Expr, [Token]) -- returns the if and the remaining tokens
+parseIf (IfToken : rest) =
+    let (condition, rest') = parseExpression rest
+        (ThenToken : rest'') = rest'
+        (trueExp, rest''') = parseExpression rest''
+        (ElseToken : rest'''') = rest'''
+        (falseExp, rest''''') = parseExpression rest''''
+        (EndToken : rest'''''') = (Expr condition trueExp falseExp, rest'''''') 
+```
+
+I hope I don't have to say why this is suboptimal...
+
+---
+
+# Woah!
+
+
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
 
 
 ---
