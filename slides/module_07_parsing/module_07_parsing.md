@@ -169,7 +169,7 @@ By turning expressions into trees, we can either execute them (i.e., interpret t
 
 # Example
 
-Suppose we want to execute `+ [ * [3; a]; * ][4; b] ]`
+Suppose we want to execute `+ [ * [3; a]; * [4; b] ]`
 
 We can recursively execute its children and add them.
 
@@ -369,13 +369,13 @@ When we see `1 + 2 * 3`,
 
 We can apply the `expr ::= value` rule to get this: `Value 1 + Value 2 * 3`.
 Then we apply `expr ::= expr + expr`  to get this: `(Add (Value 1) (Value 2)) * 3`
-Then we apply the `expr :: value` rule again... `(Add (Value 1) (Value 2)) (Value 3)`
+Then we apply the `expr :: value` rule again... `(Add (Value 1) (Value 2)) * (Value 3)`
 Finally, `Mul (Add (Value 1) (Value 2)) (Value 3)`
 
 But, this is what we *want*:
 Apply `expr ::= value` to `2` and `3`: `1 + Value 2 * Value 3`
 Then `Value 2 + (Mul (Value 2) (Value 3))`
-Then `Add 2 (Mul (Value 2) (Value 3))`
+Then `Add (Value 2) (Mul (Value 2) (Value 3))`
 
 So we need to make sure there's only one way to parse it.
 
@@ -390,7 +390,7 @@ expr ::= term
 term ::= term * factor
 term ::= factor
 factor ::= variable
-factor :: value
+factor ::= value
 ```
 
 Now we only have one way to parse: `1 + 2 * 3`. What rules can we apply?
@@ -416,7 +416,7 @@ To parse `2 * 3`, we invoke `term * factor`, and then parse `2` as a factor and 
 
 So we end up with `Add (Value 1) (Mul (Value 2) (Value 3))`
 
-And importantly: we can't get anything else. Any other parse fails (end up with a non expression)
+And importantly: we can't get anything else. Any other parse fails.
 
 ---
 

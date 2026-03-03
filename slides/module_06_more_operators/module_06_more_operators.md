@@ -138,7 +138,7 @@ This function is *not* tail recursive, because the addition happens after the re
 ```c
 int sum(int* vals, int n) {
     if (n <= 0) return 0;
-    return sum(vals + 1, n - 1) 
+    return vals[0] + sum(vals + 1, n - 1);
 }
 ```
 
@@ -628,7 +628,7 @@ Remember when we talked about the Fibonacci series?
 Here was our definition of a Fibonacci function:
 
 ```haskell
-fibo :: [Integer] -> [Integer] -> [Integer]
+fibo :: Integer -> Integer
 fibo 0 = 0
 fibo 1 = 1
 fibo n = fibo (n - 1) + fibo (n - 2)
@@ -860,9 +860,9 @@ If two functions are compatible with each other (that is, we can pass the result
 At the very least, we need type-composability. That is, if `f` and `g` are functions, then:
 
 ```haskell
-f :: a -> b
-g :: b -> c
-f . g :: a -> c
+f :: a -> c
+g :: b -> a
+f . g :: b -> c
 ```
 
 ---
