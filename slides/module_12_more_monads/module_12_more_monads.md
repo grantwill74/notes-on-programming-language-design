@@ -1610,9 +1610,135 @@ main = do { db <- connectToDb ; let ppl = runReader selectAllPeople db ; ... }
 
 ---
 
+# Exam practice problems
+
+Remember that on the term exam, I can test you on `IO`, `Maybe`, `Either`, and `[]`
+
+On the final, I can test you on any of those, plus `Reader`, `Writer`, and potentially making your own monad.
+
+I won't test you on `State` or on monad transformers (which are later in this lecture)
+
+Here are some practice questions. All 4 could be on the final, but only the first 2 could be on the 2nd term exam.
+
+---
+
+# Exam practice 1
+
+Refactor `generateReport` so that it uses `Either Error` as a monad instead of `case`.
+
+```haskell
+type Error = String
+storedCredentials :: Either Error Certificate
+connectToDb :: Certificate -> Either Error Connection
+selectData :: Connection -> Either Error [String]
+report :: Either Error [String]
+report = 
+    case storedCredentials of
+        Left error -> Left error
+        Right cert -> 
+            case connectToDb cert of
+                Left error -> Left error
+                Right connection ->
+                    selectData connection 
+```
+
+---
+
+# Exam practice 1 answer
+
+note: IRL this would use `IO` and `ExceptT`. I've simplified it to be an exam question.
+
+```haskell
+report :: Either Error [String]
+report = do 
+    cert <- storedCredentials
+    connection <- connectToDb cert
+    selectData connection 
+```
+
+```haskell
+cleanerReport :: Either Error [String]
+cleanerReport =
+    storedCredentials >>=
+    connectToDb >>=
+    selectData
+```
+
+```haskell
+codeWarsTopComment = foldl (>>=) storedCredentials [connectToDb, selectData]
+```
+
+---
+
+# Exam practice 2
+
+---
+
+# Exam practice 3
+
+
+---
+
+# Exam practice 3 answer
+
+---
+
+# Exam practice 4
+
+Consider this data type:
+```haskell
+data Counter a = Counter a Int -- the `Int` stores a count
+    deriving Functor -- fmap f (Counter x i) = Counter (f x) i 
+
+instance Applicative Counter where
+    pure x = Counter x 0
+    (Counter f i) <*> (Counter x j) = Counter (f x) (i + j + 1)
+```
+
+This type should be a monad that counts the number of times it binds or `<*>`s. Show the monad instance yourself (80%), specifically the `>>=` implementation.
+
+Monads must obey identity laws: `return x >>= f == f x`, `x >>= return == x` and also the associativity law: `m >>= g >>= h == m >>= (\x -> g x >>= h)`. 
+Does our monad follow these laws? If not, state which one is broken.
+
+---
+
+# Exam practice 4 answer
+
+The answer depends on your bind implementation. If you implemented it like this:
+```haskell
+instance Monad Counter where
+    (Counter x i) >>= f = 
+        let (Counter y j) = f x 
+        in  Counter y (i + j + 1)
+```
+Then it violates the identity laws, because `Counter 7 5 >>= return == Counter 7 6`, which is wrong (it also violates the other one: return 7 == Counter 7 0 >>= f == a counter with 1 greater count than f 7).
+
+If you forgot the `+ 1` in the bind, it no longer counts the number of binds, but also no longer breaks any laws. So you would lose points on the bind but be expected to say "it breaks none of the laws". Either way, associativity is preserved, because addition is associative.
+
+
+---
+
+# That was hard!
+
+I know. Practice 3 is the hardest question I could think of that would be fair to ask. That doesn't mean you're guaranteed to find the question I do ask to be easier, but I think there's value in seeing the full range of difficulty in the practice problems.
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+
+
+---
+
+# What's missing?
+
+---
+
 # What if I need reading and writing?
 
-Cool, we can add write-only accumulators to the language with `Writer`. But we can't actually retrieve the value during the execution of the writer.
+We can add write-only accumulators to the language with `Writer`. But we can't actually retrieve the value during the execution of the writer.
 
 And we can add global read-only data with `Reader`.
 
@@ -1631,9 +1757,10 @@ Does this require breaking the language? No. The state is treated in such a way 
 Let's imagine I have a programming language. It has this AST
 
 ```haskell
-data Expr = If { cond :: Expr, true :: Expr, false :: Expr } |  
+data Expr = Ct | Cf |  -- <- constant true and constant false values
+            If { cond :: Expr, true :: Expr, false :: Expr } |  
             While { cond :: Expr, body :: Expr } |
-            Set { name :: String, value :: Expr } | ...
+            Set { name :: String, value :: Expr } |...--(strings? numbers? etc.)
 ```
 
 Suppose I want to write the code to parse an `if` statement in my language. Maybe it looks something like:
@@ -1651,26 +1778,164 @@ end
 
 To parse an `if` expression in our language, we need to find the keyword `if`, followed by an expression, followed by `then` followed by another expression, followed by `else`, followed by yet another expression, followed by `end`.
 
-Here is a sketch of what it might look like:
+Here is a sketch of what it might look like (token constructors start with `T`):
 
 ```haskell
 parseIf :: [Token] -> (Expr, [Token]) -- returns the if and the remaining tokens
-parseIf (IfToken : rest) =
+parseIf (TIf : rest) =
     let (condition, rest') = parseExpression rest
-        (ThenToken : rest'') = rest'
+        (TThen : rest'') = rest'
         (trueExp, rest''') = parseExpression rest''
-        (ElseToken : rest'''') = rest'''
+        (TElse : rest'''') = rest'''
         (falseExp, rest''''') = parseExpression rest''''
-        (EndToken : rest'''''') = (Expr condition trueExp falseExp, rest'''''') 
+        (TEnd : rest'''''') = rest'''''
+    in  (If condition trueExp falseExp, rest'''''') -- that's 6 "'"'s. Yikes!
 ```
-
-I hope I don't have to say why this is suboptimal...
 
 ---
 
-# Woah!
+# Yikes!
 
+I hope I don't have to say why this is suboptimal...
 
+Yeah, the issue here is that every time we "change" the token stream by reading some tokens from it, we have to pass forward the modified version.
+
+And heaven forbid you forget one of those "primes". Now you have a bug!
+
+Luckily, we can use the `State` monad to fix this. A `State s a` is a program that is allowed to make use of an `s`, and then it will return an `a`. Internally, it looks like this:
+
+```haskell
+data State s a = { runState :: s -> (a, s) } 
+```
+
+It's a function that takes a state and returns a result value and a new state. 
+This is a little tough, so let's see the code first, and then we'll talk about how it works...
+
+---
+
+# Getting tokens
+
+First, let's write a little helper function to extract tokens and see `State` in action:
+```haskell
+import Control.Monad.State.Lazy  -- this is how we import the state monad
+expectToken :: Token -> State [Token] ()
+expectToken tok = do 
+    tokens <- get -- produces a monad whose result is its state 
+    if null tokens || head tokens /= tok 
+        then error $ "expected " ++ show tok
+        else put $ tail tokens -- replaces the current state with its tail
+```
+
+This function takes a token that it will "expect" to be the next token. It returns a state program that will then "get" the current state (which is a list of tokens). Then, it either crashes the program with an `error`, or it replaces the state with its own tail (removing the token).
+
+Understanding `get` and `put` are key to understanding `State`, so let's zoom in...
+
+---
+
+# `get` and `put` detour
+
+```haskell
+get :: State s s -- returns a State monad that just returns its own state
+put :: s -> State s () -- produce a State monad with the given state
+```
+
+Here is some more intuition to help us understand monads in general and `State` in particular. Monads are containers that either store a result value or another computation that leads to a result value. There is always a result type.
+
+The result type is the last part of a monad's type. So: 
+- an `IO Int` is an input-output program that returns 
+- a `Maybe Float` is a program that, if it produces anything, will produce a `Float`
+- a `Writer (Sum Int) String` is a program that writes to a `Sum Int` monoid, and then produces a `String`
+
+---
+
+# `get` and `put` (2)
+
+```haskell
+get :: State s s -- returns a State monad that just returns its own state
+put :: s -> State s () -- produce a State monad with the given state
+```
+
+The first type argument of a `State` is the type of the state it stores. So `State String Int` is a program which stores a read/write `String`, and then returns an `Int`.
+
+The `get` function therefore is a `State` monad whose result type is the same as its state type. It returns its own state so we can access it within another state.
+
+The `put` function takes a state value of type `s`, and it produces a `State` which will use that value for its state. The resulting state does not return anything useful `()`.
+
+---
+
+# Basic `get` and `put` example (3)
+
+```haskell
+doubleIfEven :: State Int () 
+doubleIfEven = do 
+    x <- get -- `get` produces a program which results in its state. Bind its result to x
+    if x `mod` 2 == 0
+        then put $ 2 * x
+        else return () -- return () is a program which does not change its state
+```
+
+What is the state that we're getting? We don't know. `State` does not actually store a state. It simply has the ability to query a state that is given to it. In this way, it works the same way as `Reader`.
+
+```haskell
+main = print $ runState doubleIfEven 20 -- returns ((), 40)
+```
+
+In the above, we provide the starting state of `20` to `runState`. The program then `get`s it, so `x` is 20, and then replaces the state with `2 * x == 40`. 
+
+---
+
+# `get`/`put` Knowledge Check
+
+1. Write `subtract1IfOdd` in the same fashion as the above. Test it, too.
+
+2. Modify your `subtract1IfOdd` program so that not only does it subtract 1 from the state if the state is odd, but it also results in that value (i.e., returns it).
+
+3. How does that change what gets printed when you `runState`?
+
+---
+
+# `get`/`put` KC answers
+
+1. 
+```haskell
+subtract1ifOdd :: State Int ()
+subtract1ifOdd = do 
+    x <- get 
+    when (odd x) (put $ x - 1) -- let's use the nice 'when' function
+```
+
+2.
+```haskell
+subtract1ifOdd' :: State Int Int
+subtract1ifOdd' = do 
+    x <- get 
+    when (odd x) (put $ x - 1)
+    get 
+```
+
+3. We get `(6, 6)` instead of `((), 6)`, because now there is a return value.
+
+---
+
+# Combining states
+
+Remember that monads represent programs.
+
+We can combine two programs together with `>>`, or by putting them on adjacent lines.
+
+So `subtract1ifOdd >> doubleIfEven` is a program that, first, if its state is odd, subtracts one from it, and then doubles its state (which is guaranteed to be even at that point).
+
+Observe:
+```haskell
+main = print $ runState (subtract1ifOdd >> doubleIfEven) 33 -- returns ((), 64)
+```
+
+We can also name this program:
+```haskell
+subtract1ifOddThenDouble = do  -- the type of this `do` is `State Int ()`
+    subtract1ifOdd
+    doubleIfEven
+```
 
 ---
 
@@ -1678,6 +1943,172 @@ I hope I don't have to say why this is suboptimal...
 
 <!-- _class: invert questions -->
 
+---
+
+# Back to parsing
+
+Now that we understand how to use state a little better, let's go back to the function we were working on to help us expect a token:
+
+```haskell
+import Control.Monad.State.Lazy
+expectToken :: Token -> State [Token] ()
+expectToken tok = do 
+    tokens <- get -- produces a monad whose result is its state 
+    if null tokens || head tokens /= tok 
+        then error $ "expected " ++ show tok
+        else put $ tail tokens -- replaces the current state with its tail
+```
+
+`expectToken` is a function that takes a token, then produces a program that will either pull that token from the token stream or crash with an error. (we'll learn later how to combine `Either` error handling with `State` so it doesn't have to crash)
+
+---
+
+# Parsing with `State` (2)
+
+```haskell
+parseIf' :: State [Token] Expr 
+parseIf' = do 
+    expectToken TIf -- use `expectToken` to make sure there's a TIf, and pop it
+    condition <- parseExpression' -- this `State` returns an expression for us
+    expectToken TThen 
+    trueExp <- parseExpression'
+    expectToken TElse
+    falseExp <- parseExpression'
+    expectToken TEnd
+    return $ If condition trueExp falseExp
+```
+
+Assuming we have a `parseExpression' :: State [Token] Expr` this is a nice, clean `State` program that will parse an `If` expression for us.
+
+How would we write `parseExpression'`?
+
+---
+
+# Parsing with `State` (3)
+
+```haskell
+parseExpression' :: State [Token] Expr 
+parseExpression' = do 
+    next <- head <$> get  
+    case next of 
+        TTrue -> modify tail >> return Ct -- I only have true and false values
+        TFalse -> modify tail >> return Cf -- right now. 
+        TIf -> parseIf' 
+        other -> error $ "parsing expression, unexpected token: " ++ show other
+```
+1. Remember that monads are also functors. `head <$> get` is a monad that returns the head of whatever `get` returned.
+2. `modify` is a function that applies the given function to the state and replaces it. `modify tail` is the same as `do { x <- get ; put $ tail x }`
+3. We use `>>` to produce a new state program. First, modify, then return `Ct`.
+
+---
+
+# State knowledge check 2
+
+1. Define the modify function. Its type is `modify :: (s -> s) -> State s ()`
+
+2. Suppose there was also a `TWhile` token and a `While { cond :: Expr, body :: Expr }` constructor. Define `parseWhile :: State [Token] Expr`. 
+
+3. Test out your code with a token stream. You can use `runState` to actually run a state program on a given state. It will return the resulting state and value. You'll also need to add `TWhile` and `TDo` tokens and modify `parseExpression'`.
+
+
+---
+
+# State KC 2 answers
+
+1.
+```haskell
+modify f = do { x <- get ; put $ f x } -- or 
+modify f = f <$> get >>= put
+```
+
+2. 
+```haskell
+parseWhile :: State [Token] Expr 
+parseWhile = do 
+    expectToken TWhile
+    condition <- parseExpression'
+    expectToken TDo
+    body <- parseExpression'
+    expectToken TEnd 
+    return $ While condition body 
+```
+
+---
+
+# State KC 2 answers (2)
+
+3. 
+```haskell
+main = do 
+    print $ runState parseExpression'
+        [TWhile,TTrue,TDo,TFalse,TEnd,TIf,TTrue,TThen,TFalse,TElse,TTrue,TEnd,TTrue,TFalse]
+```
+
+Results in `(While {cond = Ct, body = Cf},[TIf,TTrue,TThen,TFalse,TElse,TTrue,TEnd,TTrue,TFalse])`
+
+If I run `(parseExpression' >> parseExpression')`, I get
+`(If {cond = Ct, trueExp = Cf, falseExp = Ct},[TTrue,TFalse])`
+
+We first parsed the while-expression, then we threw away the result and parsed the if. We were left with a couple of random tokens in the stream that I put there afterward.
+
+Practice: how would we avoid throwing away the results?
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
+# How is state implemented?
+
+State has the most complex monad implementation. Remember that a state is secretly implemented as a function from a state type `s` to a tuple `(a, s)`
+
+Here is what it needs to do:
+1. The simplest `State` is one that ignores its `s` and gives a constant value for `a`.
+2. If I have two states, I combine them as follows:
+    1. First, we define a function that takes an `s`...
+    2. It will run the first state on it to get an `(a, s)`
+    3. Then, run the second state on the output of the first state's `s` value
+    4. The resulting function is what we return.
+
+This is how `>>` works. `>>=` is similar, but the second state can depend on `a`.
+
+---
+
+# The state `Monad` instance
+
+```haskell
+instance Monad (State s) where
+    return x = State $ (\s -> (x, s)) -- notice that this function preserves s
+    s1 >>= f = State $ \s -> -- a State is always a function inside
+        let (a1, s1') = runState s1 s -- execute state 1, get the new state
+            s2 = f a1 -- use the function to produce a second state from result
+        in  runState s2 s1' -- run the second state with the result state  
+```
+
+Frankly, when I was learning Haskell, I found this brutally hard to understand. I found it easier when I was already using state to go back and understand the bind definition. This is why we started with code rather than the `Monad` instance.
+
+Fundamentally, the `>>=` must produce a new `State`. It defines a function, which takes an initial `s`, runs the left state on it, uses the result of that to generate another state, then executes that state on the intermediate state value.
+
+---
+
+# I know what you're thinking...
+
+No, I'm not going to test you on the `State` monad. It's just a little too hard to be fair at this point in your undergraduate career.
+
+However, if you study it, it will help you. `State` is like a combination of `Reader` and `Writer`, and I am allowed to test you on those.
+
+Remember that `Reader r a` is a `r -> a`
+`Writer w a` is a `(a, w)`
+So it makes sense that `State s a` is a `s -> (a, s)`
+
+---
+
+# Questions?
+
+<!-- _class: questions invert -->
 
 ---
 
