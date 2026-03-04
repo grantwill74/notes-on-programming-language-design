@@ -1672,14 +1672,89 @@ codeWarsTopComment = foldl (>>=) storedCredentials [connectToDb, selectData]
 
 # Exam practice 2
 
+Consider a game in which every player has a PlayerName, a team, and a color:
+```haskell
+type PlayerName = String
+data Team = Redfor | Blufor
+data Color = Green | Gold | Orange
+type Assignment = (PlayerName, Color, Team) 
+```
+
+`("Alice", Green, Redfor)` means that player "Alice" has been assigned as the Green player for the Redfor team.
+
+Define a function `allAssignments :: [PlayerName] -> [Assignment]` such that it uses the list monad to generate every possible assignment between a list of playernames and the colors and teams they could have. Sample input output on next page.
+
+You **must** use the list monad to receive credit. The order of results doesn't matter.
+
+---
+
+# Exam practice 2 sample input output
+
+```
+allAssignments ["Alice", "Bob"] ==
+[
+    ("Alice",Green,Redfor),
+    ("Alice",Gold,Redfor),
+    ("Alice",Orange,Redfor),
+    ("Alice",Green,Blufor),
+    ("Alice",Gold,Blufor),
+    ("Alice",Orange,Blufor),
+    ("Bob",Green,Redfor),
+    ("Bob",Gold,Redfor),
+    ("Bob",Orange,Redfor),
+    ("Bob",Green,Blufor),
+    ("Bob",Gold,Blufor),
+    ("Bob",Orange,Blufor)
+]
+```
+
+---
+
+# Exam practice 2 (answer)
+
+```haskell
+allAssignments :: [PlayerName] -> [Assignment]
+allAssignments players = do 
+    player <- players
+    team <- [Redfor, Blufor]
+    color <- [Green, Gold, Orange]
+    return (player, color, team)
+```
+
 ---
 
 # Exam practice 3
+
+Write a program with `Writer` that imperatively calculates a factorial with `forM_/mapM_`. That is, define this function: `impFact :: Integer -> Writer (Product Integer) ()`
+
+Then define `main` so that it reads in a natural number (which you may assume to be well-formed) and computes the factorial of it using your function.
+
+You must use the `Writer` monad for `impFact` (even if it's not more elegant than just using regular functions)
+
+Hints:
+1. You can use `execWriter :: Writer w a -> w` to get the monoid out of the writer.
+2. You can use `getProduct :: Product a -> a` to get the product out of the monoid. 
 
 
 ---
 
 # Exam practice 3 answer
+
+```haskell
+impFact :: Integer -> Writer (Product Integer) ()
+impFact n = 
+    forM_ [1..n] $ \i ->
+        tell $ Product i
+        
+-- alternatively (cleaner):
+impFact' :: Integer -> Writer (Product Integer) ()
+impFact' n = mapM_ tell (Product <$> [1..n]) 
+
+main :: IO ()
+main = do 
+    n :: Integer <- read <$> getLine
+    print $ getProduct $ execWriter $ impFact' n
+```
 
 ---
 
@@ -1714,13 +1789,6 @@ instance Monad Counter where
 Then it violates the identity laws, because `Counter 7 5 >>= return == Counter 7 6`, which is wrong (it also violates the other one: return 7 == Counter 7 0 >>= f == a counter with 1 greater count than f 7).
 
 If you forgot the `+ 1` in the bind, it no longer counts the number of binds, but also no longer breaks any laws. So you would lose points on the bind but be expected to say "it breaks none of the laws". Either way, associativity is preserved, because addition is associative.
-
-
----
-
-# That was hard!
-
-I know. Practice 3 is the hardest question I could think of that would be fair to ask. That doesn't mean you're guaranteed to find the question I do ask to be easier, but I think there's value in seeing the full range of difficulty in the practice problems.
 
 ---
 
