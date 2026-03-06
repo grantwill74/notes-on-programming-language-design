@@ -1618,13 +1618,13 @@ On the final, I can test you on any of those, plus `Reader`, `Writer`, and poten
 
 I won't test you on `State` or on monad transformers (which are later in this lecture)
 
-Here are some practice questions. All 4 could be on the final, but only the first 2 could be on the 2nd term exam.
+Here are some practice questions. All of them are the type of question that could be on the final, but only the first 2 could be on the 2nd term exam.
 
 ---
 
 # Exam practice 1
 
-Refactor `generateReport` so that it uses `Either Error` as a monad instead of `case`.
+Refactor `generateReport` so that it uses `Either Error` as a monad rather than `case`.
 
 ```haskell
 type Error = String
@@ -1682,13 +1682,13 @@ type Assignment = (PlayerName, Color, Team)
 
 `("Alice", Green, Redfor)` means that player "Alice" has been assigned as the Green player for the Redfor team.
 
-Define a function `allAssignments :: [PlayerName] -> [Assignment]` such that it uses the list monad to generate every possible assignment between a list of playernames and the colors and teams they could have. Sample input output on next page.
+Define a function `allAssignments :: [PlayerName] -> [Assignment]` such that it uses the list monad to generate every possible assignment between a list of playernames and the colors and teams they could have. Sample input output on next page. Then, in `main` print every assignment for `["Ally", "Bob"]` on its own line.
 
 You **must** use the list monad to receive credit. The order of results doesn't matter.
 
 ---
 
-# Exam practice 2 sample input output
+# Exam practice 2 sample input/output
 
 ```
 allAssignments ["Alice", "Bob"] ==
@@ -1719,6 +1719,9 @@ allAssignments players = do
     team <- [Redfor, Blufor]
     color <- [Green, Gold, Orange]
     return (player, color, team)
+
+main :: IO ()
+main = mapM_ print $ allAssignments ["Alice", "Bob"]
 ```
 
 ---
@@ -1745,7 +1748,7 @@ impFact :: Integer -> Writer (Product Integer) ()
 impFact n = 
     forM_ [1..n] $ \i ->
         tell $ Product i
-        
+
 -- alternatively (cleaner):
 impFact' :: Integer -> Writer (Product Integer) ()
 impFact' n = mapM_ tell (Product <$> [1..n]) 
@@ -1786,9 +1789,41 @@ instance Monad Counter where
         let (Counter y j) = f x 
         in  Counter y (i + j + 1)
 ```
-Then it violates the identity laws, because `Counter 7 5 >>= return == Counter 7 6`, which is wrong (it also violates the other one: return 7 == Counter 7 0 >>= f == a counter with 1 greater count than f 7).
+Then it violates the identity laws, because `Counter 7 5 >>= return /= Counter 7 6`,  (it also violates the other one: return 7 == Counter 7 0 >>= f == a counter with 1 greater count than f 7).
 
 If you forgot the `+ 1` in the bind, it no longer counts the number of binds, but also no longer breaks any laws. So you would lose points on the bind but be expected to say "it breaks none of the laws". Either way, associativity is preserved, because addition is associative.
+
+---
+
+# Exam practice 5
+
+You took the brave step of including Haskell in your resume in the "proficient" section. Your technical interviewer is impressed when you pass FizzBuzz in it. Then they ask you: 
+> What if we want to extend FizzBuzz so that we can add new divisors and strings. Like "Baz" if a number is divisible by 7? I want to define a list of divisors and messages, and only print the number if it fails all of them, but to combine those that don't fail. So if we had (3, "Fizz"), (5, "Buzz"), (7, "Baz"), then 21 would print "FizzBaz", but 22 would still print "22".
+
+Solve the problem using the writer monad within a function `Int -> String`. This function should use writer to check for factors of an `Int`, and use `tell` with a message for each one it finds. Then, it should extract the monoid to see if anything was written, replacing it with the number itself as a string if not.
+
+---
+
+# Exam practice 5 answer
+
+
+```haskell
+overEngineeredFizzbuzzMessages :: [(Int, String)]
+overEngineeredFizzbuzzMessages = [
+    (3, "Fizz"),
+    (5, "Buzz"),
+    (7, "Baz"),
+    (11, "Quux") -- etc.
+ ]
+
+overEngineeredFizzbuzz :: Int -> String
+overEngineeredFizzbuzz n = 
+    if null message then show n else message
+ where 
+    message = execWriter $ 
+        forM_ overEngineeredFizzbuzzMessages $ \(m, msg) ->
+            when (n `mod` m == 0) (tell msg)
+```
 
 ---
 
@@ -1801,6 +1836,41 @@ If you forgot the `+ 1` in the bind, it no longer counts the number of binds, bu
 ---
 
 # What's missing?
+
+With monads, we have unlocked a lot of cool things. We can add new features like:
+* System-level side effects and promises (IO)
+* Early returns (Maybe)
+* Exception handling (Either) (but in an orderly way: exceptions as values)
+* Non-determinism (List)
+* Dependency Injection (Reader)
+* Logging and accumulation (Writer)
+* Imperative programming (State)
+
+---
+
+# What's missing?
+
+Some of these monads have *combinators* that are designed to make the monad's features available:
+* `print`, `putStr`, `getLine`, etc. for `IO`
+* `ask` for `Reader`, `tell` for `Writer`
+* `get`, `put`, and `modify` for `State`
+* We can make our own for `Maybe`'s early returns: `abortIf c = when c Nothing`
+
+Some combinators work for any monad, such as `when` and `forM`.
+
+But there's a problem: we can't easily mix and match.
+
+For example, what if I want to read some user input with `getLine`, but then I want to `tell` the result to a monoid?
+
+---
+
+# 
+
+---
+
+# What's missing?
+
+What if we don't even need combinators
 
 ---
 
