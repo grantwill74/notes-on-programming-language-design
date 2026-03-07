@@ -187,7 +187,7 @@ doubleIfEven = do
         else return () -- return () is a program which does not change its state
 ```
 
-What is the state that we're getting? We don't know. `State` does not actually store a state. It simply has the ability to query a state that is given to it. In this way, it works the same way as `Reader`.
+What is the state that we're getting? We don't know. `State` does not actually store a state. It simply has the ability to query a state that is given to it. In this way, it works the same way as `Reader`. `get` is like `ask`: query whatever value was passed to me.
 
 ```haskell
 main = print $ runState doubleIfEven 20 -- returns ((), 40)
@@ -232,7 +232,7 @@ subtract1ifOdd' = do
 
 # Combining states
 
-Remember that monads represent programs.
+Remember that monads, intuitively, are little programs.
 
 We can combine two programs together with `>>`, or by putting them on adjacent lines.
 
@@ -376,7 +376,7 @@ Practice: how would we avoid throwing away the results?
 
 # How is state implemented?
 
-State has the most complex monad implementation. Remember that a state is secretly implemented as a function from a state type `s` to a tuple `(a, s)`
+State has the most complex monad implementation we've seen. Remember that a state is secretly implemented as a function from a state type `s` to a tuple `(a, s)`
 
 Here is what it needs to do:
 1. The simplest `State` is one that ignores its `s` and gives a constant value for `a`.
@@ -434,7 +434,7 @@ With monads, we have unlocked a lot of cool things. We can add new features like
 * Non-determinism (List)
 * Dependency Injection (Reader)
 * Logging and accumulation (Writer)
-* Imperative programming (State)
+* Direct Imperative programming (State)
 
 These are things that are awkward or impossible with pure function calls.
 
@@ -460,9 +460,11 @@ For example, what if I want to read some user input with `getLine`, but then I w
 
 Let's try it. Suppose I want both `tell` and `getLine` together. We'll define an instance of `IO` called `getNameAndLogIt`:
 ```haskell
+import System.IO --for hFlush
 getNameAndLogIt :: IO ()
 getNameNadLogIt = do
     putStr "Please enter your name: " 
+    hFlush stdout -- putStr doesn't flush automatically, unlike putStrLn
     name <- getLine
     putStrLn ""
 ```
@@ -473,7 +475,7 @@ This is fine by itself, we can use this `IO` program like this:
 main = getNameAndLogIt
 ```
 
-But it's not logging! How can we log it?
+But it's not logging! How can we add logging functionality?
 
 ---
 
@@ -487,7 +489,7 @@ getNameNadLogIt = do
     putStr "Please enter your name: "
     hFlush stdout -- putStr doesn't flush automatically, unlike putStrLn
     name <- getLine
-    tell $ "They entered: " ++ name
+    tell $ "They entered: " ++ name  -- soo... can we just log here?
     putStrLn ""
 ```
 
@@ -514,17 +516,26 @@ So our `do` notation ends up trying to match this type:
 
 *Which it can't, because `IO`'s bind doesn't know how to bind with a `Writer`!*
 
+Put another way: the `do` block is being used to build an `IO`. We can't just inject a `Writer` (with `tell`) inside it. `IO` doesn't automatically know how to work with `Writer`.
+
 ---
 
 # More fundamentally
 
 When we create a monad, we're coming up with a little miniature language, with special statements. To do that, we need to decide what the "semicolons" mean (how to combine two statements into one statement).
 
-Monads also represent computational pipelines that return something. That's why every monad we've seen has at least one type parameter (`IO Int`, `Maybe String`, `[Float]`) and sometimes more (`Writer String ()`, 
+Monads also represent computational pipelines that return something. That's why every monad we've seen has at least one type parameter (`IO Int`, `Maybe String`, `[Float]`) and sometimes more (`Writer String ()`, `Either Error Good`, `Reader Env Ret`)
 
-The bind operator is defined in terms of a monad instance `m` and a function that returns another monad instance from the monad result of `m`. 
+That last type is the "return" value of the monad. That's why `return 7` works for any monad. It means "build this monad where there's a 7 in its 'return slot'". Every monad has a "return slot".
 
 ---
+
+# What's missing? (4)
+
+But *in between* the monad instances, some kind of magic happens.
+
+---
+
 # Monad Transformers
 
 Monad transformers add functionality to other monads. For example, if you wanted a writer with early return functionality, you could use `WriterT (Maybe (Int, String))`, which is a `Maybe` monad that also supports `tell`. 
