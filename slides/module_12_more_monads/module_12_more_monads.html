@@ -1624,403 +1624,211 @@ class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb68-1"><a
 own monad.</p>
 <p>I won’t test you on <code>State</code> or on monad transformers
 (which are later in this lecture)</p>
-<p>Here are some practice questions that could be on either the term 2
-exam or the final…</p>
+<p>Here are some practice questions. All of them are the type of
+question that could be on the final, but only the first 2 could be on
+the 2nd term exam.</p>
 <hr />
 <h1 id="exam-practice-1">Exam practice 1</h1>
+<p>Refactor <code>generateReport</code> so that it uses
+<code>Either Error</code> as a monad rather than <code>case</code>.</p>
+<div class="sourceCode" id="cb69"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Error</span> <span class="ot">=</span> <span class="dt">String</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="ot">storedCredentials ::</span> <span class="dt">Either</span> <span class="dt">Error</span> <span class="dt">Certificate</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a><span class="ot">connectToDb ::</span> <span class="dt">Certificate</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">Error</span> <span class="dt">Connection</span></span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a><span class="ot">selectData ::</span> <span class="dt">Connection</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">Error</span> [<span class="dt">String</span>]</span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a><span class="ot">report ::</span> <span class="dt">Either</span> <span class="dt">Error</span> [<span class="dt">String</span>]</span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>report <span class="ot">=</span> </span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> storedCredentials <span class="kw">of</span></span>
+<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Left</span> <span class="fu">error</span> <span class="ot">-&gt;</span> <span class="dt">Left</span> <span class="fu">error</span></span>
+<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Right</span> cert <span class="ot">-&gt;</span> </span>
+<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>            <span class="kw">case</span> connectToDb cert <span class="kw">of</span></span>
+<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>                <span class="dt">Left</span> <span class="fu">error</span> <span class="ot">-&gt;</span> <span class="dt">Left</span> <span class="fu">error</span></span>
+<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>                <span class="dt">Right</span> connection <span class="ot">-&gt;</span></span>
+<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a>                    selectData connection </span></code></pre></div>
 <hr />
+<h1 id="exam-practice-1-answer">Exam practice 1 answer</h1>
+<p>note: IRL this would use <code>IO</code> and <code>ExceptT</code>.
+I’ve simplified it to be an exam question.</p>
+<div class="sourceCode" id="cb70"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="ot">report ::</span> <span class="dt">Either</span> <span class="dt">Error</span> [<span class="dt">String</span>]</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>report <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    cert <span class="ot">&lt;-</span> storedCredentials</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>    connection <span class="ot">&lt;-</span> connectToDb cert</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>    selectData connection </span></code></pre></div>
+<div class="sourceCode" id="cb71"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="ot">cleanerReport ::</span> <span class="dt">Either</span> <span class="dt">Error</span> [<span class="dt">String</span>]</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>cleanerReport <span class="ot">=</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    storedCredentials <span class="op">&gt;&gt;=</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    connectToDb <span class="op">&gt;&gt;=</span></span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    selectData</span></code></pre></div>
+<div class="sourceCode" id="cb72"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>codeWarsTopComment <span class="ot">=</span> <span class="fu">foldl</span> (<span class="op">&gt;&gt;=</span>) storedCredentials [connectToDb, selectData]</span></code></pre></div>
 <hr />
 <h1 id="exam-practice-2">Exam practice 2</h1>
+<p>Consider a game in which every player has a PlayerName, a team, and a
+color:</p>
+<div class="sourceCode" id="cb73"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">PlayerName</span> <span class="ot">=</span> <span class="dt">String</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Team</span> <span class="ot">=</span> <span class="dt">Redfor</span> <span class="op">|</span> <span class="dt">Blufor</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Color</span> <span class="ot">=</span> <span class="dt">Green</span> <span class="op">|</span> <span class="dt">Gold</span> <span class="op">|</span> <span class="dt">Orange</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Assignment</span> <span class="ot">=</span> (<span class="dt">PlayerName</span>, <span class="dt">Color</span>, <span class="dt">Team</span>) </span></code></pre></div>
+<p><code>("Alice", Green, Redfor)</code> means that player “Alice” has
+been assigned as the Green player for the Redfor team.</p>
+<p>Define a function
+<code>allAssignments :: [PlayerName] -&gt; [Assignment]</code> such that
+it uses the list monad to generate every possible assignment between a
+list of playernames and the colors and teams they could have. Sample
+input output on next page. Then, in <code>main</code> print every
+assignment for <code>["Ally", "Bob"]</code> on its own line.</p>
+<p>You <strong>must</strong> use the list monad to receive credit. The
+order of results doesn’t matter.</p>
+<hr />
+<h1 id="exam-practice-2-sample-inputoutput">Exam practice 2 sample
+input/output</h1>
+<pre><code>allAssignments [&quot;Alice&quot;, &quot;Bob&quot;] ==
+[
+    (&quot;Alice&quot;,Green,Redfor),
+    (&quot;Alice&quot;,Gold,Redfor),
+    (&quot;Alice&quot;,Orange,Redfor),
+    (&quot;Alice&quot;,Green,Blufor),
+    (&quot;Alice&quot;,Gold,Blufor),
+    (&quot;Alice&quot;,Orange,Blufor),
+    (&quot;Bob&quot;,Green,Redfor),
+    (&quot;Bob&quot;,Gold,Redfor),
+    (&quot;Bob&quot;,Orange,Redfor),
+    (&quot;Bob&quot;,Green,Blufor),
+    (&quot;Bob&quot;,Gold,Blufor),
+    (&quot;Bob&quot;,Orange,Blufor)
+]</code></pre>
+<hr />
+<h1 id="exam-practice-2-answer">Exam practice 2 (answer)</h1>
+<div class="sourceCode" id="cb75"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="ot">allAssignments ::</span> [<span class="dt">PlayerName</span>] <span class="ot">-&gt;</span> [<span class="dt">Assignment</span>]</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>allAssignments players <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>    player <span class="ot">&lt;-</span> players</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>    team <span class="ot">&lt;-</span> [<span class="dt">Redfor</span>, <span class="dt">Blufor</span>]</span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>    color <span class="ot">&lt;-</span> [<span class="dt">Green</span>, <span class="dt">Gold</span>, <span class="dt">Orange</span>]</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (player, color, team)</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="fu">mapM_</span> <span class="fu">print</span> <span class="op">$</span> allAssignments [<span class="st">&quot;Alice&quot;</span>, <span class="st">&quot;Bob&quot;</span>]</span></code></pre></div>
 <hr />
 <h1 id="exam-practice-3">Exam practice 3</h1>
-<p>Consider this data type:</p>
-<div class="sourceCode" id="cb69"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Counter</span> <span class="ot">=</span> <span class="op">...</span></span></code></pre></div>
-<p>This type should be a monad that does the same thing as writer, but
-every time we <code>a &gt;&gt; b</code>, the monoid from <code>b</code>
-is applied twice to <code>a</code> instead of once. That is,
-<code>Dw (a, Sum 1) &gt;&gt; Dw (b, Sum 2)</code> should be
-<code>Dw (b, Sum 5)</code> (from
-<code>Sum 1 &lt;&gt; Sum 2 &lt;&gt; Sum 2</code>)</p>
-<ol type="1">
-<li>(40%) Define the <code>Applicative</code> instance</li>
-<li>(40%) Define the <code>Monad</code> instance</li>
-<li>(10%) Create a <code>main</code> that prints the result of
-<code>((), Sum 1) &gt;&gt; ((), Sum 2)</code></li>
-</ol>
+<p>Write a program with <code>Writer</code> that imperatively calculates
+a factorial with <code>forM_/mapM_</code>. That is, define this
+function:
+<code>impFact :: Integer -&gt; Writer (Product Integer) ()</code></p>
+<p>Then define <code>main</code> so that it reads in a natural number
+(which you may assume to be well-formed) and computes the factorial of
+it using your function.</p>
+<p>You must use the <code>Writer</code> monad for <code>impFact</code>
+(even if it’s not more elegant than just using regular functions)</p>
+<p>Hints: 1. You can use <code>execWriter :: Writer w a -&gt; w</code>
+to get the monoid out of the writer. 2. You can use
+<code>getProduct :: Product a -&gt; a</code> to get the product out of
+the monoid.</p>
 <hr />
 <h1 id="exam-practice-3-answer">Exam practice 3 answer</h1>
-<hr />
-<h1 id="what-if-i-need-reading-and-writing">What if I need reading and
-writing?</h1>
-<p>Cool, we can add write-only accumulators to the language with
-<code>Writer</code>. But we can’t actually retrieve the value during the
-execution of the writer.</p>
-<p>And we can add global read-only data with <code>Reader</code>.</p>
-<p>But what if we want fully imperative code with a value that we can
-read <em>and</em> write.</p>
-<p>This brings us to what is IMO the most complex built-in
-<code>Monad</code>: <code>State</code>.</p>
-<p>Using this monad, we gain access to fully imperative code with some
-read/write state.</p>
-<p>Does this require breaking the language? No. The state is treated in
-such a way that behind the scenes, everything is purely functional.
-However, we can pretend that there is read/write data.</p>
-<hr />
-<h1 id="first-why">First: why?</h1>
-<p>Let’s imagine I have a programming language. It has this AST</p>
-<div class="sourceCode" id="cb70"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">Ct</span> <span class="op">|</span> <span class="dt">Cf</span> <span class="op">|</span>  <span class="co">-- &lt;- constant true and constant false values</span></span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>            <span class="dt">If</span> {<span class="ot"> cond ::</span> <span class="dt">Expr</span>,<span class="ot"> true ::</span> <span class="dt">Expr</span>,<span class="ot"> false ::</span> <span class="dt">Expr</span> } <span class="op">|</span>  </span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>            <span class="dt">While</span> {<span class="ot"> cond ::</span> <span class="dt">Expr</span>,<span class="ot"> body ::</span> <span class="dt">Expr</span> } <span class="op">|</span></span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Set</span> {<span class="ot"> name ::</span> <span class="dt">String</span>,<span class="ot"> value ::</span> <span class="dt">Expr</span> } <span class="op">|...--</span>(strings<span class="op">?</span> numbers<span class="op">?</span> etc<span class="op">.</span>)</span></code></pre></div>
-<p>Suppose I want to write the code to parse an <code>if</code>
-statement in my language. Maybe it looks something like:</p>
-<pre><code>if x == 20 then 
-    &quot;it&#39;s 20&quot;
-else 
-    &quot;it wasn&#39;t 20&quot;
-end</code></pre>
-<hr />
-<h1 id="writing-the-parser">Writing the parser</h1>
-<p>To parse an <code>if</code> expression in our language, we need to
-find the keyword <code>if</code>, followed by an expression, followed by
-<code>then</code> followed by another expression, followed by
-<code>else</code>, followed by yet another expression, followed by
-<code>end</code>.</p>
-<p>Here is a sketch of what it might look like (token constructors start
-with <code>T</code>):</p>
-<div class="sourceCode" id="cb72"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseIf ::</span> [<span class="dt">Token</span>] <span class="ot">-&gt;</span> (<span class="dt">Expr</span>, [<span class="dt">Token</span>]) <span class="co">-- returns the if and the remaining tokens</span></span>
-<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>parseIf (<span class="dt">TIf</span> <span class="op">:</span> rest) <span class="ot">=</span></span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (condition, rest&#39;) <span class="ot">=</span> parseExpression rest</span>
-<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">TThen</span> <span class="op">:</span> rest&#39;&#39;) <span class="ot">=</span> rest&#39;</span>
-<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>        (trueExp, rest&#39;&#39;&#39;) <span class="ot">=</span> parseExpression rest&#39;&#39;</span>
-<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">TElse</span> <span class="op">:</span> rest&#39;&#39;&#39;&#39;) <span class="ot">=</span> rest&#39;&#39;&#39;</span>
-<span id="cb72-7"><a href="#cb72-7" aria-hidden="true" tabindex="-1"></a>        (falseExp, rest&#39;&#39;&#39;&#39;&#39;) <span class="ot">=</span> parseExpression rest&#39;&#39;&#39;&#39;</span>
-<span id="cb72-8"><a href="#cb72-8" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">TEnd</span> <span class="op">:</span> rest&#39;&#39;&#39;&#39;&#39;&#39;) <span class="ot">=</span> rest&#39;&#39;&#39;&#39;&#39;</span>
-<span id="cb72-9"><a href="#cb72-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span>  (<span class="dt">If</span> condition trueExp falseExp, rest&#39;&#39;&#39;&#39;&#39;&#39;) <span class="co">-- that&#39;s 6 &quot;&#39;&quot;&#39;s. Yikes!</span></span></code></pre></div>
-<hr />
-<h1 id="yikes">Yikes!</h1>
-<p>I hope I don’t have to say why this is suboptimal…</p>
-<p>Yeah, the issue here is that every time we “change” the token stream
-by reading some tokens from it, we have to pass forward the modified
-version.</p>
-<p>And heaven forbid you forget one of those “primes”. Now you have a
-bug!</p>
-<p>Luckily, we can use the <code>State</code> monad to fix this. A
-<code>State s a</code> is a program that is allowed to make use of an
-<code>s</code>, and then it will return an <code>a</code>. Internally,
-it looks like this:</p>
-<div class="sourceCode" id="cb73"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">State</span> s a <span class="ot">=</span> {<span class="ot"> runState ::</span> s <span class="ot">-&gt;</span> (a, s) } </span></code></pre></div>
-<p>It’s a function that takes a state and returns a result value and a
-new state. This is a little tough, so let’s see the code first, and then
-we’ll talk about how it works…</p>
-<hr />
-<h1 id="getting-tokens">Getting tokens</h1>
-<p>First, let’s write a little helper function to extract tokens and see
-<code>State</code> in action:</p>
-<div class="sourceCode" id="cb74"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Lazy</span>  <span class="co">-- this is how we import the state monad</span></span>
-<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a><span class="ot">expectToken ::</span> <span class="dt">Token</span> <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Token</span>] ()</span>
-<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>expectToken tok <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    tokens <span class="ot">&lt;-</span> get <span class="co">-- produces a monad whose result is its state </span></span>
-<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> <span class="fu">null</span> tokens <span class="op">||</span> <span class="fu">head</span> tokens <span class="op">/=</span> tok </span>
-<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;expected &quot;</span> <span class="op">++</span> <span class="fu">show</span> tok</span>
-<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> put <span class="op">$</span> <span class="fu">tail</span> tokens <span class="co">-- replaces the current state with its tail</span></span></code></pre></div>
-<p>This function takes a token that it will “expect” to be the next
-token. It returns a state program that will then “get” the current state
-(which is a list of tokens). Then, it either crashes the program with an
-<code>error</code>, or it replaces the state with its own tail (removing
-the token).</p>
-<p>Understanding <code>get</code> and <code>put</code> are key to
-understanding <code>State</code>, so let’s zoom in…</p>
-<hr />
-<h1 id="get-and-put-detour"><code>get</code> and <code>put</code>
-detour</h1>
-<div class="sourceCode" id="cb75"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="ot">get ::</span> <span class="dt">State</span> s s <span class="co">-- returns a State monad that just returns its own state</span></span>
-<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="ot">put ::</span> s <span class="ot">-&gt;</span> <span class="dt">State</span> s () <span class="co">-- produce a State monad with the given state</span></span></code></pre></div>
-<p>Here is some more intuition to help us understand monads in general
-and <code>State</code> in particular. Monads are containers that either
-store a result value or another computation that leads to a result
-value. There is always a result type.</p>
-<p>The result type is the last part of a monad’s type. So: - an
-<code>IO Int</code> is an input-output program that returns - a
-<code>Maybe Float</code> is a program that, if it produces anything,
-will produce a <code>Float</code> - a
-<code>Writer (Sum Int) String</code> is a program that writes to a
-<code>Sum Int</code> monoid, and then produces a <code>String</code></p>
-<hr />
-<h1 id="get-and-put-2"><code>get</code> and <code>put</code> (2)</h1>
 <div class="sourceCode" id="cb76"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="ot">get ::</span> <span class="dt">State</span> s s <span class="co">-- returns a State monad that just returns its own state</span></span>
-<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a><span class="ot">put ::</span> s <span class="ot">-&gt;</span> <span class="dt">State</span> s () <span class="co">-- produce a State monad with the given state</span></span></code></pre></div>
-<p>The first type argument of a <code>State</code> is the type of the
-state it stores. So <code>State String Int</code> is a program which
-stores a read/write <code>String</code>, and then returns an
-<code>Int</code>.</p>
-<p>The <code>get</code> function therefore is a <code>State</code> monad
-whose result type is the same as its state type. It returns its own
-state so we can access it within another state.</p>
-<p>The <code>put</code> function takes a state value of type
-<code>s</code>, and it produces a <code>State</code> which will use that
-value for its state. The resulting state does not return anything useful
-<code>()</code>.</p>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="ot">impFact ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> (<span class="dt">Product</span> <span class="dt">Integer</span>) ()</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>impFact n <span class="ot">=</span> </span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>    forM_ [<span class="dv">1</span><span class="op">..</span>n] <span class="op">$</span> \i <span class="ot">-&gt;</span></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>        tell <span class="op">$</span> <span class="dt">Product</span> i</span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- alternatively (cleaner):</span></span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a><span class="ot">impFact&#39; ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> (<span class="dt">Product</span> <span class="dt">Integer</span>) ()</span>
+<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a>impFact&#39; n <span class="ot">=</span> <span class="fu">mapM_</span> tell (<span class="dt">Product</span> <span class="op">&lt;$&gt;</span> [<span class="dv">1</span><span class="op">..</span>n]) </span>
+<span id="cb76-9"><a href="#cb76-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb76-10"><a href="#cb76-10" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb76-11"><a href="#cb76-11" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb76-12"><a href="#cb76-12" aria-hidden="true" tabindex="-1"></a><span class="ot">    n ::</span> <span class="dt">Integer</span> <span class="ot">&lt;-</span> <span class="fu">read</span> <span class="op">&lt;$&gt;</span> <span class="fu">getLine</span></span>
+<span id="cb76-13"><a href="#cb76-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> <span class="op">$</span> getProduct <span class="op">$</span> execWriter <span class="op">$</span> impFact&#39; n</span></code></pre></div>
 <hr />
-<h1 id="basic-get-and-put-example-3">Basic <code>get</code> and
-<code>put</code> example (3)</h1>
+<h1 id="exam-practice-4">Exam practice 4</h1>
+<p>Consider this data type:</p>
 <div class="sourceCode" id="cb77"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="ot">doubleIfEven ::</span> <span class="dt">State</span> <span class="dt">Int</span> () </span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>doubleIfEven <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> get <span class="co">-- `get` produces a program which results in its state. Bind its result to x</span></span>
-<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> x <span class="ot">`mod`</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span></span>
-<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> put <span class="op">$</span> <span class="dv">2</span> <span class="op">*</span> x</span>
-<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="fu">return</span> () <span class="co">-- return () is a program which does not change its state</span></span></code></pre></div>
-<p>What is the state that we’re getting? We don’t know.
-<code>State</code> does not actually store a state. It simply has the
-ability to query a state that is given to it. In this way, it works the
-same way as <code>Reader</code>.</p>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Counter</span> a <span class="ot">=</span> <span class="dt">Counter</span> a <span class="dt">Int</span> <span class="co">-- the `Int` stores a count</span></span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> <span class="dt">Functor</span> <span class="co">-- fmap f (Counter x i) = Counter (f x) i </span></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Applicative</span> <span class="dt">Counter</span> <span class="kw">where</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pure</span> x <span class="ot">=</span> <span class="dt">Counter</span> x <span class="dv">0</span></span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Counter</span> f i) <span class="op">&lt;*&gt;</span> (<span class="dt">Counter</span> x j) <span class="ot">=</span> <span class="dt">Counter</span> (f x) (i <span class="op">+</span> j <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>This type should be a monad that counts the number of times it binds
+or <code>&lt;*&gt;</code>s. Show the monad instance yourself (80%),
+specifically the <code>&gt;&gt;=</code> implementation.</p>
+<p>Monads must obey identity laws:
+<code>return x &gt;&gt;= f == f x</code>,
+<code>x &gt;&gt;= return == x</code> and also the associativity law:
+<code>m &gt;&gt;= g &gt;&gt;= h == m &gt;&gt;= (\x -&gt; g x &gt;&gt;= h)</code>.
+Does our monad follow these laws? If not, state which one is broken.</p>
+<hr />
+<h1 id="exam-practice-4-answer">Exam practice 4 answer</h1>
+<p>The answer depends on your bind implementation. If you implemented it
+like this:</p>
 <div class="sourceCode" id="cb78"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> runState doubleIfEven <span class="dv">20</span> <span class="co">-- returns ((), 40)</span></span></code></pre></div>
-<p>In the above, we provide the starting state of <code>20</code> to
-<code>runState</code>. The program then <code>get</code>s it, so
-<code>x</code> is 20, and then replaces the state with
-<code>2 * x == 40</code>.</p>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">Counter</span> <span class="kw">where</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Counter</span> x i) <span class="op">&gt;&gt;=</span> f <span class="ot">=</span> </span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (<span class="dt">Counter</span> y j) <span class="ot">=</span> f x </span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span>  <span class="dt">Counter</span> y (i <span class="op">+</span> j <span class="op">+</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>Then it violates the identity laws, because
+<code>Counter 7 5 &gt;&gt;= return /= Counter 7 6</code>, (it also
+violates the other one: return 7 == Counter 7 0 &gt;&gt;= f == a counter
+with 1 greater count than f 7).</p>
+<p>If you forgot the <code>+ 1</code> in the bind, it no longer counts
+the number of binds, but also no longer breaks any laws. So you would
+lose points on the bind but be expected to say “it breaks none of the
+laws”. Either way, associativity is preserved, because addition is
+associative.</p>
 <hr />
-<h1 id="getput-knowledge-check"><code>get</code>/<code>put</code>
-Knowledge Check</h1>
-<ol type="1">
-<li><p>Write <code>subtract1IfOdd</code> in the same fashion as the
-above. Test it, too.</p></li>
-<li><p>Modify your <code>subtract1IfOdd</code> program so that not only
-does it subtract 1 from the state if the state is odd, but it also
-results in that value (i.e., returns it).</p></li>
-<li><p>How does that change what gets printed when you
-<code>runState</code>?</p></li>
-</ol>
+<h1 id="exam-practice-5">Exam practice 5</h1>
+<p>You took the brave step of including Haskell in your resume in the
+“proficient” section. Your technical interviewer is impressed when you
+pass FizzBuzz in it. Then they ask you: &gt; What if we want to extend
+FizzBuzz so that we can add new divisors and strings. Like “Baz” if a
+number is divisible by 7? I want to define a list of divisors and
+messages, and only print the number if it fails all of them, but to
+combine those that don’t fail. So if we had (3, “Fizz”), (5, “Buzz”),
+(7, “Baz”), then 21 would print “FizzBaz”, but 22 would still print
+“22”.</p>
+<p>Solve the problem using the writer monad within a function
+<code>Int -&gt; String</code>. This function should use writer to check
+for factors of an <code>Int</code>, and use <code>tell</code> with a
+message for each one it finds. Then, it should extract the monoid to see
+if anything was written, replacing it with the number itself as a string
+if not.</p>
 <hr />
-<h1 id="getput-kc-answers"><code>get</code>/<code>put</code> KC
-answers</h1>
-<ol type="1">
-<li></li>
-</ol>
+<h1 id="exam-practice-5-answer">Exam practice 5 answer</h1>
 <div class="sourceCode" id="cb79"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="ot">subtract1ifOdd ::</span> <span class="dt">State</span> <span class="dt">Int</span> ()</span>
-<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>subtract1ifOdd <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> get </span>
-<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>    when (<span class="fu">odd</span> x) (put <span class="op">$</span> x <span class="op">-</span> <span class="dv">1</span>) <span class="co">-- let&#39;s use the nice &#39;when&#39; function</span></span></code></pre></div>
-<ol start="2" type="1">
-<li></li>
-</ol>
-<div class="sourceCode" id="cb80"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="ot">subtract1ifOdd&#39; ::</span> <span class="dt">State</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
-<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>subtract1ifOdd&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> get </span>
-<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>    when (<span class="fu">odd</span> x) (put <span class="op">$</span> x <span class="op">-</span> <span class="dv">1</span>)</span>
-<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>    get </span></code></pre></div>
-<ol start="3" type="1">
-<li>We get <code>(6, 6)</code> instead of <code>((), 6)</code>, because
-now there is a return value.</li>
-</ol>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="ot">overEngineeredFizzbuzzMessages ::</span> [(<span class="dt">Int</span>, <span class="dt">String</span>)]</span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>overEngineeredFizzbuzzMessages <span class="ot">=</span> [</span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">3</span>, <span class="st">&quot;Fizz&quot;</span>),</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">5</span>, <span class="st">&quot;Buzz&quot;</span>),</span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">7</span>, <span class="st">&quot;Baz&quot;</span>),</span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">11</span>, <span class="st">&quot;Quux&quot;</span>) <span class="co">-- etc.</span></span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a> ]</span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a><span class="ot">overEngineeredFizzbuzz ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a>overEngineeredFizzbuzz n <span class="ot">=</span> </span>
+<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> <span class="fu">null</span> message <span class="kw">then</span> <span class="fu">show</span> n <span class="kw">else</span> message</span>
+<span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a> <span class="kw">where</span> </span>
+<span id="cb79-13"><a href="#cb79-13" aria-hidden="true" tabindex="-1"></a>    message <span class="ot">=</span> execWriter <span class="op">$</span> </span>
+<span id="cb79-14"><a href="#cb79-14" aria-hidden="true" tabindex="-1"></a>        forM_ overEngineeredFizzbuzzMessages <span class="op">$</span> \(m, msg) <span class="ot">-&gt;</span></span>
+<span id="cb79-15"><a href="#cb79-15" aria-hidden="true" tabindex="-1"></a>            when (n <span class="ot">`mod`</span> m <span class="op">==</span> <span class="dv">0</span>) (tell msg)</span></code></pre></div>
 <hr />
-<h1 id="combining-states">Combining states</h1>
-<p>Remember that monads represent programs.</p>
-<p>We can combine two programs together with <code>&gt;&gt;</code>, or
-by putting them on adjacent lines.</p>
-<p>So <code>subtract1ifOdd &gt;&gt; doubleIfEven</code> is a program
-that, first, if its state is odd, subtracts one from it, and then
-doubles its state (which is guaranteed to be even at that point).</p>
-<p>Observe:</p>
-<div class="sourceCode" id="cb81"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> runState (subtract1ifOdd <span class="op">&gt;&gt;</span> doubleIfEven) <span class="dv">33</span> <span class="co">-- returns ((), 64)</span></span></code></pre></div>
-<p>We can also name this program:</p>
-<div class="sourceCode" id="cb82"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>subtract1ifOddThenDouble <span class="ot">=</span> <span class="kw">do</span>  <span class="co">-- the type of this `do` is `State Int ()`</span></span>
-<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>    subtract1ifOdd</span>
-<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>    doubleIfEven</span></code></pre></div>
+<h1 id="more-practice">More practice?</h1>
+<p>You know what to do! Feed this presentation to an LLM and ask it to
+feed you more short questions to grind on. Make sure to use the raw
+<code>.md</code> file for the presentation because LLMs are good with
+markdown.</p>
+<p>Monad knowledge only comes from using them. Things will start
+clicking into place.</p>
+<p>You really do need to learn each monad. Treat them all as tiny
+programming languages, like the ones we learned to parse.</p>
+<p>Once you learn all of them, you can take your knowledge to the next
+level. Next module we’ll be talking about the <code>State</code> monad,
+as well as combining monad features with monad transformers!</p>
 <hr />
 <h1 id="questions-7">Questions?</h1>
 <!-- _class: invert questions -->
-<hr />
-<h1 id="back-to-parsing">Back to parsing</h1>
-<p>Now that we understand how to use state a little better, let’s go
-back to the function we were working on to help us expect a token:</p>
-<div class="sourceCode" id="cb83"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Lazy</span></span>
-<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a><span class="ot">expectToken ::</span> <span class="dt">Token</span> <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Token</span>] ()</span>
-<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>expectToken tok <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>    tokens <span class="ot">&lt;-</span> get <span class="co">-- produces a monad whose result is its state </span></span>
-<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> <span class="fu">null</span> tokens <span class="op">||</span> <span class="fu">head</span> tokens <span class="op">/=</span> tok </span>
-<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;expected &quot;</span> <span class="op">++</span> <span class="fu">show</span> tok</span>
-<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> put <span class="op">$</span> <span class="fu">tail</span> tokens <span class="co">-- replaces the current state with its tail</span></span></code></pre></div>
-<p><code>expectToken</code> is a function that takes a token, then
-produces a program that will either pull that token from the token
-stream or crash with an error. (we’ll learn later how to combine
-<code>Either</code> error handling with <code>State</code> so it doesn’t
-have to crash)</p>
-<hr />
-<h1 id="parsing-with-state-2">Parsing with <code>State</code> (2)</h1>
-<div class="sourceCode" id="cb84"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseIf&#39; ::</span> <span class="dt">State</span> [<span class="dt">Token</span>] <span class="dt">Expr</span> </span>
-<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>parseIf&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TIf</span> <span class="co">-- use `expectToken` to make sure there&#39;s a TIf, and pop it</span></span>
-<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>    condition <span class="ot">&lt;-</span> parseExpression&#39; <span class="co">-- this `State` returns an expression for us</span></span>
-<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TThen</span> </span>
-<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>    trueExp <span class="ot">&lt;-</span> parseExpression&#39;</span>
-<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TElse</span></span>
-<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a>    falseExp <span class="ot">&lt;-</span> parseExpression&#39;</span>
-<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TEnd</span></span>
-<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">If</span> condition trueExp falseExp</span></code></pre></div>
-<p>Assuming we have a
-<code>parseExpression' :: State [Token] Expr</code> this is a nice,
-clean <code>State</code> program that will parse an <code>If</code>
-expression for us.</p>
-<p>How would we write <code>parseExpression'</code>?</p>
-<hr />
-<h1 id="parsing-with-state-3">Parsing with <code>State</code> (3)</h1>
-<div class="sourceCode" id="cb85"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseExpression&#39; ::</span> <span class="dt">State</span> [<span class="dt">Token</span>] <span class="dt">Expr</span> </span>
-<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>parseExpression&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>    next <span class="ot">&lt;-</span> <span class="fu">head</span> <span class="op">&lt;$&gt;</span> get  </span>
-<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> next <span class="kw">of</span> </span>
-<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">TTrue</span> <span class="ot">-&gt;</span> modify <span class="fu">tail</span> <span class="op">&gt;&gt;</span> <span class="fu">return</span> <span class="dt">Ct</span> <span class="co">-- I only have true and false values</span></span>
-<span id="cb85-6"><a href="#cb85-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">TFalse</span> <span class="ot">-&gt;</span> modify <span class="fu">tail</span> <span class="op">&gt;&gt;</span> <span class="fu">return</span> <span class="dt">Cf</span> <span class="co">-- right now. </span></span>
-<span id="cb85-7"><a href="#cb85-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">TIf</span> <span class="ot">-&gt;</span> parseIf&#39; </span>
-<span id="cb85-8"><a href="#cb85-8" aria-hidden="true" tabindex="-1"></a>        other <span class="ot">-&gt;</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;parsing expression, unexpected token: &quot;</span> <span class="op">++</span> <span class="fu">show</span> other</span></code></pre></div>
-<ol type="1">
-<li>Remember that monads are also functors.
-<code>head &lt;$&gt; get</code> is a monad that returns the head of
-whatever <code>get</code> returned.</li>
-<li><code>modify</code> is a function that applies the given function to
-the state and replaces it. <code>modify tail</code> is the same as
-<code>do { x &lt;- get ; put $ tail x }</code></li>
-<li>We use <code>&gt;&gt;</code> to produce a new state program. First,
-modify, then return <code>Ct</code>.</li>
-</ol>
-<hr />
-<h1 id="state-knowledge-check-2">State knowledge check 2</h1>
-<ol type="1">
-<li><p>Define the modify function. Its type is
-<code>modify :: (s -&gt; s) -&gt; State s ()</code></p></li>
-<li><p>Suppose there was also a <code>TWhile</code> token and a
-<code>While { cond :: Expr, body :: Expr }</code> constructor. Define
-<code>parseWhile :: State [Token] Expr</code>.</p></li>
-<li><p>Test out your code with a token stream. You can use
-<code>runState</code> to actually run a state program on a given state.
-It will return the resulting state and value. You’ll also need to add
-<code>TWhile</code> and <code>TDo</code> tokens and modify
-<code>parseExpression'</code>.</p></li>
-</ol>
-<hr />
-<h1 id="state-kc-2-answers">State KC 2 answers</h1>
-<ol type="1">
-<li></li>
-</ol>
-<div class="sourceCode" id="cb86"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>modify f <span class="ot">=</span> <span class="kw">do</span> { x <span class="ot">&lt;-</span> get ; put <span class="op">$</span> f x } <span class="co">-- or </span></span>
-<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>modify f <span class="ot">=</span> f <span class="op">&lt;$&gt;</span> get <span class="op">&gt;&gt;=</span> put</span></code></pre></div>
-<ol start="2" type="1">
-<li></li>
-</ol>
-<div class="sourceCode" id="cb87"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseWhile ::</span> <span class="dt">State</span> [<span class="dt">Token</span>] <span class="dt">Expr</span> </span>
-<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>parseWhile <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TWhile</span></span>
-<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>    condition <span class="ot">&lt;-</span> parseExpression&#39;</span>
-<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TDo</span></span>
-<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>    body <span class="ot">&lt;-</span> parseExpression&#39;</span>
-<span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TEnd</span> </span>
-<span id="cb87-8"><a href="#cb87-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">While</span> condition body </span></code></pre></div>
-<hr />
-<h1 id="state-kc-2-answers-2">State KC 2 answers (2)</h1>
-<ol start="3" type="1">
-<li></li>
-</ol>
-<div class="sourceCode" id="cb88"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span> </span>
-<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> <span class="op">$</span> runState parseExpression&#39;</span>
-<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>        [<span class="dt">TWhile</span>,<span class="dt">TTrue</span>,<span class="dt">TDo</span>,<span class="dt">TFalse</span>,<span class="dt">TEnd</span>,<span class="dt">TIf</span>,<span class="dt">TTrue</span>,<span class="dt">TThen</span>,<span class="dt">TFalse</span>,<span class="dt">TElse</span>,<span class="dt">TTrue</span>,<span class="dt">TEnd</span>,<span class="dt">TTrue</span>,<span class="dt">TFalse</span>]</span></code></pre></div>
-<p>Results in
-<code>(While {cond = Ct, body = Cf},[TIf,TTrue,TThen,TFalse,TElse,TTrue,TEnd,TTrue,TFalse])</code></p>
-<p>If I run <code>(parseExpression' &gt;&gt; parseExpression')</code>, I
-get
-<code>(If {cond = Ct, trueExp = Cf, falseExp = Ct},[TTrue,TFalse])</code></p>
-<p>We first parsed the while-expression, then we threw away the result
-and parsed the if. We were left with a couple of random tokens in the
-stream that I put there afterward.</p>
-<p>Practice: how would we avoid throwing away the results?</p>
-<hr />
-<h1 id="questions-8">Questions?</h1>
-<!-- _class: invert questions -->
-<hr />
-<h1 id="how-is-state-implemented">How is state implemented?</h1>
-<p>State has the most complex monad implementation. Remember that a
-state is secretly implemented as a function from a state type
-<code>s</code> to a tuple <code>(a, s)</code></p>
-<p>Here is what it needs to do: 1. The simplest <code>State</code> is
-one that ignores its <code>s</code> and gives a constant value for
-<code>a</code>. 2. If I have two states, I combine them as follows: 1.
-First, we define a function that takes an <code>s</code>… 2. It will run
-the first state on it to get an <code>(a, s)</code> 3. Then, run the
-second state on the output of the first state’s <code>s</code> value 4.
-The resulting function is what we return.</p>
-<p>This is how <code>&gt;&gt;</code> works. <code>&gt;&gt;=</code> is
-similar, but the second state can depend on <code>a</code>.</p>
-<hr />
-<h1 id="the-state-monad-instance">The state <code>Monad</code>
-instance</h1>
-<div class="sourceCode" id="cb89"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> (<span class="dt">State</span> s) <span class="kw">where</span></span>
-<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> x <span class="ot">=</span> <span class="dt">State</span> <span class="op">$</span> (\s <span class="ot">-&gt;</span> (x, s)) <span class="co">-- notice that this function preserves s</span></span>
-<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>    s1 <span class="op">&gt;&gt;=</span> f <span class="ot">=</span> <span class="dt">State</span> <span class="op">$</span> \s <span class="ot">-&gt;</span> <span class="co">-- a State is always a function inside</span></span>
-<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (a1, s1&#39;) <span class="ot">=</span> runState s1 s <span class="co">-- execute state 1, get the new state</span></span>
-<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>            s2 <span class="ot">=</span> f a1 <span class="co">-- use the function to produce a second state from result</span></span>
-<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span>  runState s2 s1&#39; <span class="co">-- run the second state with the result state  </span></span></code></pre></div>
-<p>Frankly, when I was learning Haskell, I found this brutally hard to
-understand. I found it easier when I was already using state to go back
-and understand the bind definition. This is why we started with code
-rather than the <code>Monad</code> instance.</p>
-<p>Fundamentally, the <code>&gt;&gt;=</code> must produce a new
-<code>State</code>. It defines a function, which takes an initial
-<code>s</code>, runs the left state on it, uses the result of that to
-generate another state, then executes that state on the intermediate
-state value.</p>
-<hr />
-<h1 id="i-know-what-youre-thinking">I know what you’re thinking…</h1>
-<p>No, I’m not going to test you on the <code>State</code> monad. It’s
-just a little too hard to be fair at this point in your undergraduate
-career.</p>
-<p>However, if you study it, it will help you. <code>State</code> is
-like a combination of <code>Reader</code> and <code>Writer</code>, and I
-am allowed to test you on those.</p>
-<p>Remember that <code>Reader r a</code> is a <code>r -&gt; a</code>
-<code>Writer w a</code> is a <code>(a, w)</code> So it makes sense that
-<code>State s a</code> is a <code>s -&gt; (a, s)</code></p>
-<hr />
-<h1 id="questions-9">Questions?</h1>
-<!-- _class: questions invert -->
-<hr />
-<h1 id="monad-transformers">Monad Transformers</h1>
-<p>Monad transformers add functionality to other monads. For example, if
-you wanted a writer with early return functionality, you could use
-<code>WriterT (Maybe (Int, String))</code>, which is a
-<code>Maybe</code> monad that also supports <code>tell</code>.</p>
-<p>This is a common pattern in Haskell. There’s also a
-<code>MaybeT</code> to add early return capability to another monad. We
-can use transformers to layer on functionality.</p>
-<hr />
-<h1 id="monad-transformers-again">Monad Transformers again</h1>
-<p>Monad transformers are a complex topic, and a little too advanced for
-me to feel comfortable requiring them. However, they are important for
-practical Haskell programming.</p>
-<p>If you plan on actually building a real software system in Haskell,
-I’ve heard people say your first step is creating a monad transformer
-stack (I haven’t tried real Haskell software engineering, but it does
-sound fun.)</p>
-<hr />
-<hr />
-<p>First,</p>
 </body>
 </html>
