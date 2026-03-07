@@ -1,0 +1,1 @@
+Danny: [for clarifying the wording about `Ratio` not repeating in binary.](https://github.com/grantwill74/notes-on-programming-language-design/pull/1)
