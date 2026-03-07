@@ -550,7 +550,7 @@ They are a little weirder, so we'll be saving that for next module.
 However, some important compound types:
 - [Type]: a list of types. E.g., [Int] is a list of Ints. [Float] is a list of float.
 - String is just a renaming of [Char]. It's a list of Chars.
-- Ratio (requires `import Data.Ratio`). A rational number, *not a float*, actually stores the fraction as numerator/denominator as two Integers, so e.g., 3/10 can be represented exactly.
+- Ratio (requires `import Data.Ratio`). A rational number, *not a float*, actually stores the fraction as numerator/denominator as two Integers, so e.g., 3/10 can be represented exactly in binary.
 - IO Type: a program that, when it is eventually run (by someone else), it will result in "Type". E.g., IO Int is a program that will do some I/O and then return an Int.
 - (TypeA, TypeB, ...): a tuple. (Int, Float) is a pair of an int and a float.
 
