@@ -708,11 +708,11 @@ E.g., [Int] is a list of Ints. [Float] is a list of float. - String is
 just a renaming of [Char]. It’s a list of Chars. - Ratio (requires
 <code>import Data.Ratio</code>). A rational number, <em>not a
 float</em>, actually stores the fraction as numerator/denominator as two
-Integers, so e.g., 3/10 can be represented exactly. - IO Type: a program
-that, when it is eventually run (by someone else), it will result in
-“Type”. E.g., IO Int is a program that will do some I/O and then return
-an Int. - (TypeA, TypeB, …): a tuple. (Int, Float) is a pair of an int
-and a float.</p>
+Integers, so e.g., 3/10 can be represented exactly in binary. - IO Type:
+a program that, when it is eventually run (by someone else), it will
+result in “Type”. E.g., IO Int is a program that will do some I/O and
+then return an Int. - (TypeA, TypeB, …): a tuple. (Int, Float) is a pair
+of an int and a float.</p>
 <hr />
 <h1 id="the-most-important-type">The most important type</h1>
 <p>But the most important type of all is the function. It’s a functional
@@ -932,7 +932,7 @@ to change its behavior. We’ll see this later.</p>
 <hr />
 <h1 id="knowledge-check-2">Knowledge check 2</h1>
 <ol type="1">
-<li>Define a type that takes three arguments of any type and returns
+<li>Define a function that takes three arguments of any type and returns
 something of the same type as the first argument.</li>
 <li>Define a function of that type.</li>
 <li>Define a function that’s like <code>const</code>, but the function
@@ -1013,7 +1013,7 @@ feed one value to another are more important.</p>
 side:</p>
 <div class="sourceCode" id="cb28"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>stuff x <span class="ot">=</span> <span class="fu">print</span> (<span class="dv">2</span><span class="op">*</span>x <span class="op">+</span> <span class="dv">1</span>) <span class="co">-- versus</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>stuff&#39; <span class="ot">=</span> <span class="fu">print</span> <span class="op">.</span> (<span class="op">+</span><span class="dv">1</span>) <span class="op">.</span> (<span class="dv">2</span><span class="op">*</span>x)</span></code></pre></div>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>stuff&#39; <span class="ot">=</span> <span class="fu">print</span> <span class="op">.</span> (<span class="op">+</span><span class="dv">1</span>) <span class="op">.</span> (<span class="dv">2</span><span class="op">*</span>)</span></code></pre></div>
 <p>The reason is that the composition operators create a function that
 takes a value, so we don’t need a variable.</p>
 <p>This style of coding is called “point free”. The point in question is
@@ -1029,18 +1029,12 @@ something.</p>
 <hr />
 <h1 id="knowledge-check-3">Knowledge Check 3</h1>
 <ol type="1">
-<li>Define a function point free that evaluates the polynomial <span
-class="math inline">\(x^2 + 2x + 9\)</span> point free.</li>
-<li>What is a type that is compatible with the function you defined?
-(That is, it wouldn’t be wrong to put that type above it).</li>
 <li>What is the type of <code>(*2.5) . (*2.5) . (*2.5)</code>?</li>
 <li>Rewrite that function but not point-free.</li>
 </ol>
 <hr />
 <h1 id="knowledge-check-3-answers">Knowledge Check 3 answers</h1>
 <ol type="1">
-<li><code>f = (+9) . (2.5*) . (^2)</code></li>
-<li><code>Float -&gt; Float</code></li>
 <li><code>Float -&gt; Float</code></li>
 <li><code>f x = 2.5 * 2.5 * 2.5 * x</code> or
 <code>f x = 15.625 * x</code></li>
