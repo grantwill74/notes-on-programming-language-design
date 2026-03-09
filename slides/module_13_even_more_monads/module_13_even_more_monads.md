@@ -234,7 +234,7 @@ subtract1ifOdd' = do
 
 Remember that monads, intuitively, are little programs.
 
-We can combine two programs together with `>>`, or by putting them on adjacent lines.
+We can combine two programs together with `>>` or by putting them on adjacent `do` lines.
 
 So `subtract1ifOdd >> doubleIfEven` is a program that, first, if its state is odd, subtracts one from it, and then doubles its state (which is guaranteed to be even at that point).
 
@@ -532,15 +532,34 @@ That last type is the "return" value of the monad. That's why `return 7` works f
 
 # What's missing? (4)
 
-But *in between* the monad instances, some kind of magic happens.
+But *in between* the monad instances, some kind of magic happens:
+* In between two `Writers`, the monoids are `<>`d. 
+* In between two `IO`s, we combine them into one program.
+* In between two `State`s, we build a new state function that first executes the first `State`, then passes the result to the second `State` and executes that.
+* etc.
+
+But what about in between a `Writer` and a `State`? What should happen? `State` doesn't have a monoid in it, and `Writer` doesn't take a state as input, it only writes to it.
+
+The combination is not defined.
+
+---
+
+# Questions
+<!-- _class: invert questions -->
 
 ---
 
 # Monad Transformers
 
+If we want to combine monads like that, we have to use a monad transformer.
+
 Monad transformers add functionality to other monads. For example, if you wanted a writer with early return functionality, you could use `WriterT (Maybe (Int, String))`, which is a `Maybe` monad that also supports `tell`. 
 
+The `T` stands for `Transformer`. `WriterT` is a type constructor that adds `Writer` functionality to an existing `Monad`. In this case, `Maybe`.
+
 This is a common pattern in Haskell. There's also a `MaybeT` to add early return capability to another monad. We can use transformers to layer on functionality.
+
+Almost every monad has a `T` variant to add its abilities to another monad. The only common one that doesn't is `IO`. `IO` doesn't have very interesting behavior.
 
 ---
 
@@ -550,9 +569,25 @@ Monad transformers are a complex topic, and a little too advanced for me to feel
 
 If you plan on actually building a real software system in Haskell, I've heard people say your first step is creating a monad transformer stack (I haven't tried real Haskell software engineering, but it does sound fun.)
 
+A monad transformer is a data type that will take a monad and "inject" new behavior.
 
+Let's take a look at how we can use them to combine features from different monads.
 
 ---
+
+# `MaybeT`
+
+One of the simplest monad transformers is one of the most useful: `MaybeT`.
+
+`MaybeT` says "I want to add early returns to another monad."
+
+For example, `MaybeT IO ()` is like an `IO ()`, but if any of the programs inside of it return a `Nothing`, the whole thing will quit.
+
+`MaybeT` is a constructor. Its first argument is the monad type that we want to add the feature to. In this case `IO` is the monad type. The second argument is the return type of the new monad, which is going to be `()`. 
+
+Note, `MaybeT (IO ())` is wrong, because `IO ()` has the wrong kind. The value you pass needs to be a Type constructo `* -> *`. `MaybeT` will fill
+
+TODO
 
 
 ---
