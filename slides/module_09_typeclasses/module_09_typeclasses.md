@@ -220,7 +220,7 @@ This kind of data is very dangerous. Consider a variable that stores whether the
 
 Huge numbers of bugs are caused by unexpected state changes. 
 
-Some language delicately tease out the different kinds of state. For example, Rust makes it easy to have shared immutable state, and non-shared mutable state, but requires safeguards for shared mutable state.
+Some languages delicately tease out the different kinds of state. For example, Rust makes it easy to have shared immutable state, and non-shared mutable state, but requires safeguards for shared mutable state.
 
 Haskell takes a different approach: there is no mutability.
 
@@ -295,7 +295,7 @@ The idea here is that the composition operator `.` will generate a different kin
 
 # Why do this?
 
-Normally, when you search for examples polymorphism in computer science, you end up with descriptions of how it enables code that is more *flexible*. This is kind of misleading in my opinion.
+Normally, when you search for examples of polymorphism in computer science, you end up with descriptions of how it enables code that is more *flexible*. This is kind of misleading in my opinion.
 
 For example, in this Java code, the `+` operator is polymorphic:
 ```java
@@ -916,7 +916,7 @@ Pair 10 20
 
 # `Show` and `Read` rules
 
-It should be clear that `Show` and `Read` are inverses of one another.
+`read` inverses `show`.
 
 That is, we expect `read . show == id`. That is, calling `show` on some showable data, and then calling `read` on the result should be the same as doing nothing (the identity function `id`)
 
@@ -947,7 +947,7 @@ Here we're saying "A `Pair` of two values `a` and `b` is equal to a another `Pai
 This situation (where we want equality to mean "all the fields are equal") is so common, Haskell lets us just derive it:
 ```haskell
 data Pair a = Pair a a
-    deriving Show, Read, Eq
+    deriving (Show, Read, Eq)
 ```
 
 Now we can compare pairs:
@@ -1021,6 +1021,7 @@ Practice: Implement `Enum` for `Rgb` without `deriving` but make `succ` and `pre
 - `Integral`, the class of types that are "integer-like" and can be converted to `Integer`
 - `Floating`, the class of types that are "float-like". You can use this to write code that works with both `Float` and `Double` without needing to assume one or the other.
 - `Foldable`, the class of data structures that can be folded with `foldl` and `foldr`.
+
 These are all useful, but they don't have `derive` recipes. You can't magically interpret a random data type as a floating point number with `deriving Floating`.
 
 ---
