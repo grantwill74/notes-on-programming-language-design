@@ -585,10 +585,7 @@ For example, `MaybeT IO ()` is like an `IO ()`, but if any of the programs insid
 
 `MaybeT` is a constructor. Its first argument is the monad type that we want to add the feature to. In this case `IO` is the monad type. The second argument is the return type of the new monad, which is going to be `()`. 
 
-Note, `MaybeT (IO ())` is wrong, because `IO ()` has the wrong kind. The value you pass needs to be a Type constructo `* -> *`. `MaybeT` will fill
-
-TODO
-
+Note, `MaybeT (IO ())` is wrong, because `(IO ())` has the wrong kind. The value you pass needs to be a Type constructor `* -> *`. `IO` is not a compete type, it's a type function. The monad we give to a monad transformers must be a type function. The `()` is actually the return type of the *new* monad.
 
 ---
 
