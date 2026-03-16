@@ -513,7 +513,7 @@ It actually works on them because they form a semigroup.</p>
 <p>Notice the Haskell mindset: find a way to encode a mathematical
 structure. They often elegantly describe coding patterns.</p>
 <p>Very cool: soon we will learn about monads, which are one way that
-Haskell represents commands to do IO. Many monads are also monoids,
+Haskell represents commands to do IO. Some monads are also monoids,
 which allows us to use <code>stimes</code> on them. So
 <code>5 `stimes` putStrLn "hi"</code> actually prints “hi” 5 times like
 you would expect.</p>
@@ -681,9 +681,9 @@ a value, where, if we take <code>max mempty x</code> we get
 <code>x</code> for all <code>x</code>?</p>
 <hr />
 <h1 id="try-0">Try 0</h1>
-<p>0 is a logical choice. <code>max 0 x</code> is always <code>x</code>,
-and <code>max x 0</code> is also always <code>x</code>, so 0 is both a
-left and right identity.</p>
+<p>0 is a logical choice. <code>max 0 x</code> is always <code>x</code>
+for unsigned integers, and <code>max x 0</code> is also always
+<code>x</code>, so 0 is both a left and right identity.</p>
 <div class="sourceCode" id="cb9"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monoid</span> <span class="dt">Max</span> <span class="kw">where</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">Max</span> <span class="dv">0</span></span></code></pre></div>

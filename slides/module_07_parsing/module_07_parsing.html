@@ -366,7 +366,7 @@ here, but what am I adding? Oh, it’s 3 and <code>a</code>”</p>
 interpret them), or turn them into machine code easier.</p>
 <hr />
 <h1 id="example">Example</h1>
-<p>Suppose we want to execute <code>+ [ * [3; a]; * ][4; b] ]</code></p>
+<p>Suppose we want to execute <code>+ [ * [3; a]; * [4; b] ]</code></p>
 <p>We can recursively execute its children and add them.</p>
 <p>We execute <code>* [3, a]</code> and get a result. We execute
 <code>* [4, b]</code> and get another result. We add those results
@@ -527,12 +527,12 @@ rules in either order…</p>
 <code>expr ::= expr + expr</code> to get this:
 <code>(Add (Value 1) (Value 2)) * 3</code> Then we apply the
 <code>expr :: value</code> rule again…
-<code>(Add (Value 1) (Value 2)) (Value 3)</code> Finally,
+<code>(Add (Value 1) (Value 2)) * (Value 3)</code> Finally,
 <code>Mul (Add (Value 1) (Value 2)) (Value 3)</code></p>
 <p>But, this is what we <em>want</em>: Apply <code>expr ::= value</code>
 to <code>2</code> and <code>3</code>: <code>1 + Value 2 * Value 3</code>
 Then <code>Value 2 + (Mul (Value 2) (Value 3))</code> Then
-<code>Add 2 (Mul (Value 2) (Value 3))</code></p>
+<code>Add (Value 2) (Mul (Value 2) (Value 3))</code></p>
 <p>So we need to make sure there’s only one way to parse it.</p>
 <hr />
 <h1 id="fixing-it">Fixing it</h1>
@@ -543,7 +543,7 @@ expr ::= term
 term ::= term * factor
 term ::= factor
 factor ::= variable
-factor :: value</code></pre>
+factor ::= value</code></pre>
 <p>Now we only have one way to parse: <code>1 + 2 * 3</code>. What rules
 can we apply?</p>
 <p>Previously we went bottom-up, replacing words as quickly as
@@ -564,8 +564,8 @@ and then parse <code>2</code> as a factor and then a value.
 <code>3</code> is already a factor, so we treat it as a value.</p>
 <p>So we end up with
 <code>Add (Value 1) (Mul (Value 2) (Value 3))</code></p>
-<p>And importantly: we can’t get anything else. Any other parse fails
-(end up with a non expression)</p>
+<p>And importantly: we can’t get anything else. Any other parse
+fails.</p>
 <hr />
 <h1 id="associativity-is-fixed-too">Associativity is fixed, too</h1>
 <p>Notice how we have this in our language:</p>

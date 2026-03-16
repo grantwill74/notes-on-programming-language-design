@@ -415,7 +415,7 @@ missiles ignited before the missile bays opened).</p>
 <hr />
 <h1 id="shared-mutable-state-1">Shared mutable state</h1>
 <p>Huge numbers of bugs are caused by unexpected state changes.</p>
-<p>Some language delicately tease out the different kinds of state. For
+<p>Some languages delicately tease out the different kinds of state. For
 example, Rust makes it easy to have shared immutable state, and
 non-shared mutable state, but requires safeguards for shared mutable
 state.</p>
@@ -473,7 +473,7 @@ functions it is given as arguments.</p>
 parameters</em>. Basically variables that are filled in with types.</p>
 <hr />
 <h1 id="why-do-this">Why do this?</h1>
-<p>Normally, when you search for examples polymorphism in computer
+<p>Normally, when you search for examples of polymorphism in computer
 science, you end up with descriptions of how it enables code that is
 more <em>flexible</em>. This is kind of misleading in my opinion.</p>
 <p>For example, in this Java code, the <code>+</code> operator is
@@ -1001,8 +1001,7 @@ class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a
 <hr />
 <h1 id="show-and-read-rules"><code>Show</code> and <code>Read</code>
 rules</h1>
-<p>It should be clear that <code>Show</code> and <code>Read</code> are
-inverses of one another.</p>
+<p><code>read</code> inverses <code>show</code>.</p>
 <p>That is, we expect <code>read . show == id</code>. That is, calling
 <code>show</code> on some showable data, and then calling
 <code>read</code> on the result should be the same as doing nothing (the
@@ -1034,7 +1033,7 @@ and <code>b</code> is equal to a another <code>Pair</code> of
 equal”) is so common, Haskell lets us just derive it:</p>
 <div class="sourceCode" id="cb38"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Pair</span> a <span class="ot">=</span> <span class="dt">Pair</span> a a</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> <span class="dt">Show</span>, <span class="dt">Read</span>, <span class="dt">Eq</span></span></code></pre></div>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Read</span>, <span class="dt">Eq</span>)</span></code></pre></div>
 <p>Now we can compare pairs:</p>
 <div class="sourceCode" id="cb39"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> a <span class="ot">=</span> <span class="dt">Pair</span> <span class="dv">10</span> <span class="dv">20</span></span>
@@ -1108,11 +1107,11 @@ and can be converted to <code>Integer</code></li>
 can use this to write code that works with both <code>Float</code> and
 <code>Double</code> without needing to assume one or the other.</li>
 <li><code>Foldable</code>, the class of data structures that can be
-folded with <code>foldl</code> and <code>foldr</code>. These are all
-useful, but they don’t have <code>derive</code> recipes. You can’t
-magically interpret a random data type as a floating point number with
-<code>deriving Floating</code>.</li>
+folded with <code>foldl</code> and <code>foldr</code>.</li>
 </ul>
+<p>These are all useful, but they don’t have <code>derive</code>
+recipes. You can’t magically interpret a random data type as a floating
+point number with <code>deriving Floating</code>.</p>
 <hr />
 <h1 id="questions-6">Questions?</h1>
 <!-- _class: invert questions -->

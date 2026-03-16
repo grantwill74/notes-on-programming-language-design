@@ -315,7 +315,7 @@ We didn't need a special operator for it that only works on strings. It actually
 
 Notice the Haskell mindset: find a way to encode a mathematical structure. They often elegantly describe coding patterns.
 
-Very cool: soon we will learn about monads, which are one way that Haskell represents commands to do IO. Many monads are also monoids, which allows us to use `stimes` on them. So ``5 `stimes` putStrLn "hi"`` actually prints "hi" 5 times like you would expect.
+Very cool: soon we will learn about monads, which are one way that Haskell represents commands to do IO. Some monads are also monoids, which allows us to use `stimes` on them. So ``5 `stimes` putStrLn "hi"`` actually prints "hi" 5 times like you would expect.
 
 ---
 
@@ -481,7 +481,7 @@ What would be a good choice of `mempty`? That is, what is a value, where, if we 
 
 # Try 0
 
-0 is a logical choice. `max 0 x` is always `x`, and `max x 0` is also always `x`, so 0 is both a left and right identity.
+0 is a logical choice. `max 0 x` is always `x` for unsigned integers, and `max x 0` is also always `x`, so 0 is both a left and right identity.
 
 ```haskell
 instance Monoid Max where

@@ -273,7 +273,8 @@ but also as a full-on programming language (<a
 href="https://lisp-lang.org/">Common Lisp</a>, <a
 href="https://www.scheme.org/">Scheme</a>, <a
 href="https://racket-lang.org/">Racket</a>, <a
-href="https://clojure.org/">Clojure</a>)</p>
+href="https://clojure.org/">Clojure</a>, <a
+href="https://fennel-lang.org/">Fennel</a>)</p>
 <hr />
 <h1 id="lisp-dialects">Lisp dialects</h1>
 <p>Lisp was released as a single language, but soon, “dialects”
@@ -395,7 +396,7 @@ Most programming languages are highly analytic, meaning that they can be
 broken down into tiny “words” that mean very exact things, rather than
 grouping lots of related thoughts into one word.</p>
 <p>Most “words” from a programming language perspective are either
-operators, functions, or values.</p>
+operators, functions, variables, or values.</p>
 <hr />
 <h1 id="example-lexing">Example lexing</h1>
 <p>For example, the program
@@ -562,7 +563,7 @@ earlier.</p>
 <p>For example:</p>
 <div class="sourceCode" id="cb8"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tokenize <span class="st">&quot;(print \&quot;hello\&quot; (+ 2 2))&quot;</span> <span class="op">==</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    [<span class="dt">Lp</span>, <span class="dt">StrLit</span> <span class="st">&quot;hello&quot;</span>, <span class="dt">Lp</span>, <span class="dt">Sym</span> <span class="st">&quot;+&quot;</span>, <span class="dt">IntLit</span> <span class="dv">2</span>, <span class="dt">IntLit</span> <span class="dv">2</span>, <span class="dt">Rp</span>, <span class="dt">Rp</span>]</span></code></pre></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    [<span class="dt">Lp</span>, <span class="dt">Sym</span> <span class="st">&quot;print&quot;</span>, <span class="dt">StrLit</span> <span class="st">&quot;hello&quot;</span>, <span class="dt">Lp</span>, <span class="dt">Sym</span> <span class="st">&quot;+&quot;</span>, <span class="dt">IntLit</span> <span class="dv">2</span>, <span class="dt">IntLit</span> <span class="dv">2</span>, <span class="dt">Rp</span>, <span class="dt">Rp</span>]</span></code></pre></div>
 <hr />
 <h1 id="what-goes-in-that-function">What goes in that function?</h1>
 <p>That’s the question you’ll need to answer to complete the next
@@ -749,8 +750,8 @@ it, the program will run forever:
 <code>print natSquares -- &lt;-- this loops forever</code></p>
 <hr />
 <h1 id="take-2">Take (2)</h1>
-<p>Enter <code>take</code>. This is a simple functional operator that
-takes a certain number of elements from a list.</p>
+<p>Enter <code>take</code>. This is a simple function that takes a
+certain number of elements from a list.</p>
 <p><code>print $ take 10 natSquares</code></p>
 <p><code>take 10 natSquares</code> results in
 <code>[0,1,4,9,16,25,36,49,64,81]</code>, which is what gets
@@ -1094,7 +1095,7 @@ it’s the first value of <code>l</code>. Then, after adding
 value…</p>
 <hr />
 <h1 id="foldl-example-2"><code>foldl</code> example (2)</h1>
-<p><code>((((0 + length "hey") + length "there") + length "hi") + length "there)</code>
+<p><code>((((0 + length "hey") + length "there") + length "hi") + length "there")</code>
 First, <code>l == 0</code> and <code>r == "hey"</code>. Then the binary
 function adds <code>l</code> to the length of <code>r</code>, and the
 new value of <code>l == 3</code>. Then we add

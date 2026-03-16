@@ -331,7 +331,7 @@ the next value), and we can overwrite <code>n</code> with
 happens after the recursive call:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> sum<span class="op">(</span><span class="dt">int</span><span class="op">*</span> vals<span class="op">,</span> <span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sum<span class="op">(</span>vals <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> n <span class="op">-</span> <span class="dv">1</span><span class="op">)</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> vals<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">+</span> sum<span class="op">(</span>vals <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> n <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>So we have to keep pushing the pointer and <code>n</code> on the
 stack until finally, we reach <code>n == 0</code>, and we can return
@@ -748,7 +748,7 @@ pairs and such. It’s easier recursively.</p>
 <p>Remember when we talked about the Fibonacci series?</p>
 <p>Here was our definition of a Fibonacci function:</p>
 <div class="sourceCode" id="cb22"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ot">fibo ::</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> [<span class="dt">Integer</span>]</span>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ot">fibo ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>fibo <span class="dv">0</span> <span class="ot">=</span> <span class="dv">0</span></span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>fibo <span class="dv">1</span> <span class="ot">=</span> <span class="dv">1</span></span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>fibo n <span class="ot">=</span> fibo (n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fibo (n <span class="op">-</span> <span class="dv">2</span>)</span></code></pre></div>
@@ -937,9 +937,9 @@ the result of one to the other), we call them “composable”.</p>
 <p>At the very least, we need type-composability. That is, if
 <code>f</code> and <code>g</code> are functions, then:</p>
 <div class="sourceCode" id="cb31"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ot">f ::</span> a <span class="ot">-&gt;</span> b</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ot">g ::</span> b <span class="ot">-&gt;</span> c</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>f <span class="op">.</span><span class="ot"> g ::</span> a <span class="ot">-&gt;</span> c</span></code></pre></div>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ot">f ::</span> a <span class="ot">-&gt;</span> c</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ot">g ::</span> b <span class="ot">-&gt;</span> a</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>f <span class="op">.</span><span class="ot"> g ::</span> b <span class="ot">-&gt;</span> c</span></code></pre></div>
 <hr />
 <h1 id="composability-2">Composability (2)</h1>
 <p>Composability becomes an issue when we start making our programs more
