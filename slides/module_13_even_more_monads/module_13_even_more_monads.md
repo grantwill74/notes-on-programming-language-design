@@ -734,4 +734,14 @@ To understand it, consider this: what is the type of `Nothing`, and what type do
 
 # `hoistMaybe`
 
-`Nothing` has type `Maybe a`. But we don't want it to be `Maybe`
+`Nothing` has type `Maybe a`. But we don't want it to be `Maybe`. We want it to be a `MaybeT m a`, where `m` is whatever monad we choose.
+
+That's what `hoistMaybe` is. I can't find its exact source code (the Hackage page has been down for some time), but it probably looks like this:
+
+```haskell
+hoistMaybe :: Monad m => Maybe a -> MaybeT m a
+hoistMaybe Nothing = MaybeT (return Nothing)
+hoistMaybe (Just x) = MaybeT (return (Just x)) 
+```
+
+That last line could also be `hoistMaybe (Just x) = lift $ return x`. Same result.
