@@ -553,11 +553,11 @@ The combination is not defined.
 
 If we want to combine monads like that, we have to use a monad transformer.
 
-Monad transformers add functionality to other monads. For example, if you wanted a writer with early return functionality, you could use `WriterT (Maybe (Int, String))`, which is a `Maybe` monad that also supports `tell`. 
+Monad transformers add functionality to other monads. For example, if you wanted to add early returns to a writer, you could use `MaybeT (Writer String) ()`, which is a `Maybe` monad that also supports `tell`. 
 
-The `T` stands for `Transformer`. `WriterT` is a type constructor that adds `Writer` functionality to an existing `Monad`. In this case, `Maybe`.
+The `T` stands for `Transformer`. `MaybeT` is a type constructor that adds `Maybe` functionality to an existing `Monad`. In this case, `Writer`.
 
-This is a common pattern in Haskell. There's also a `MaybeT` to add early return capability to another monad. We can use transformers to layer on functionality.
+This is a common pattern in Haskell. There's also a `WriterT` to add logging to another monad. We can use transformers to layer on functionality. We'll talk about how `WriterT String Maybe ()` is different from `MaybeT (Writer String) ()` in a bit. 
 
 Almost every monad has a `T` variant to add its abilities to another monad. The only common one that doesn't is `IO`. `IO` doesn't have very interesting behavior.
 
@@ -568,6 +568,8 @@ Almost every monad has a `T` variant to add its abilities to another monad. The 
 Monad transformers are a complex topic, and a little too advanced for me to feel comfortable requiring them. However, they are important for practical Haskell programming. 
 
 If you plan on actually building a real software system in Haskell, I've heard people say your first step is creating a monad transformer stack (I haven't tried real Haskell software engineering, but it does sound fun.)
+
+This means using `type` or `newtype` to define a monad transformer that has all the features you need for the main logic of your app (the stuff directly called from `main`).
 
 A monad transformer is a data type that will take a monad and "inject" new behavior.
 
@@ -591,4 +593,145 @@ Note, `MaybeT (IO ())` is wrong, because `(IO ())` has the wrong kind. The value
 
 # `MaybeT` example
 
-Let's make 
+Let's make a simple login routine to show this off. As always, let's be mindful of the fact that actual authentication will involve more steps than this. We're illustrating the value of early-returns, not expressing best practices for security (which this is *not* one).
+
+```haskell
+ensureValidUser :: MaybeT IO ()
+ensureValidUser = do 
+    lift $ putStr "enter your username: "
+    lift $ hFlush stdout
+    name <- lift getLine
+    unless (name `elem` validUsers) $ do 
+        lift $ putStrLn "invalid user detected. exiting..."
+        hoistMaybe Nothing
+    where 
+        validUsers = ["alice", "bob", "camille"]
+```
+
+There are two things to cover first: `lift` and `hoistMaybe`. Let's do that!
+
+---
+
+# `lift`
+
+A monad transformer is always built "on top of" another monad. It's a new datatype. 
+
+The `MaybeT` data definition looks like this:
+```haskell
+newtype MaybeT m a = MaybeT { runMaybeT :: m (Maybe a) }
+```
+
+`m` is the monad it takes. It stores a version of that monad which will return a `Maybe a` instead of an `a`.
+
+That is, previously, the monad had an `a` in its return slot. Now it has a `Maybe a`. So, based on its results, we can bind it to another `MaybeT` if the return value was `Just`. But if it returned `Nothing`, we will ignore any further `MaybeT` we have to bind to.
+
+---
+
+# `lift` (2)
+
+The problem is that we want to use another monad, and add early returns to it.
+
+So suppose we want to use `IO`. That means we want to use functions like `putStrLn`.
+
+But `putStrLn :: String -> IO ()`, it's not a `String -> MaybeT IO ()`. So we can't bind an `IO ()` with a `MaybeT IO ()`. They are two different types!
+
+`lift` takes an instance of the inner monad (the `IO a` in this case) and "wraps" it inside of the outer monad. So `lift` will convert an `IO a` into a `MaybeT IO a`. 
+
+It will also convert a `Writer String a` into a `MaybeT (Writer String) a`. Or a `Maybe a` into a `WriterT Maybe a`. 
+
+`lift` is a function of the `MonadTrans` typeclass. All monad transformers can "lift" monads (or other transformer stacks) into them. This typeclass also implies `Monad`.
+
+---
+
+# `lift` for `MaybeT`
+
+But if `lift` is part of the `MonadTrans` typeclass, that means every `MonadTrans` (which includes `MaybeT`) can have its own definition for it. What does `lift` do for `MaybeT`?
+
+```haskell
+instance MonadTrans MaybeT where
+    lift = MaybeT . (fmap Just)
+```
+
+It just maps "Just" on it and puts the result inside a `MaybeT`. 
+
+So if the original `IO` returned `7`, now it will return `Just 7`, and that value will be stored inside the MaybeT.
+
+---
+
+# `lift` for `MaybeT` (2)
+
+This is what was meant by the type definition:
+```haskell
+newtype MaybeT m a = MaybeT { runMaybeT :: m (Maybe a) }
+```
+
+Take a monad, only now it returns a `Maybe a`. So by default, make it `Just`.
+
+Now let's revisit the original code ...
+
+---
+
+# `MaybeT` example revisited
+
+
+```haskell
+ensureValidUser :: MaybeT IO ()
+ensureValidUser = do 
+    lift $ putStr "enter your username: "
+    lift $ hFlush stdout
+    name <- lift getLine
+    unless (name `elem` validUsers) $ do 
+        lift $ putStrLn "invalid user detected. exiting..."
+        hoistMaybe Nothing
+    where 
+        validUsers = ["alice", "bob", "camille"]
+```
+
+Every time we want to do IO, we `lift` it to make it return a `Just IO`, which won't early return. 
+
+Eww...do we really have to write `lift` for *every single* inner monad we use?
+
+---
+
+# Refactoring the lifts:
+
+No, this is equivalent, and also more performant if this trivial optimization is turned off:
+
+```haskell
+ensureValidUser' :: MaybeT IO ()
+ensureValidUser' = do 
+    name <- lift $ do 
+        putStr "enter your username: "
+        hFlush stdout
+        getLine
+    unless (name `elem` validUsers) $ do 
+        lift $ putStrLn "invalid user detected. exiting..."
+        hoistMaybe Nothing
+    where 
+        validUsers = ["alice", "bob", "camille"]
+```
+
+Like most of Haskell's features, `do` is an expression. Therefore, we can pass a `do` as the argument of `lift`. This `do` constructs an ordinary `IO`, which we then bind on the result of after converting it into an `IO (Maybe String)` using `lift`.
+
+---
+
+# Refactoring the lifts:
+
+It's actually a law of monad transformers that:
+```haskell
+lift a >> lift b == lift (a >> b)
+```
+
+So it's possible the optimizer can recognize these opportunities. 
+
+"lifting" isn't free: we're slapping a "Just" on top of something. Not expensive, but not free, either. It's nice to only do this occasionally.
+
+But there's still one function we haven't explained: `hoistMaybe`.
+
+To understand it, consider this: what is the type of `Nothing`, and what type does it need to be`?
+
+---
+
+# `hoistMaybe`
+
+`Nothing` has type `Maybe a`. But we don't want it to be `Maybe`
