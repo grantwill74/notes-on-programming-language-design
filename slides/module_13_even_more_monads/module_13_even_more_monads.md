@@ -745,3 +745,156 @@ hoistMaybe (Just x) = MaybeT (return (Just x))
 ```
 
 That last line could also be `hoistMaybe (Just x) = lift $ return x`. Same result.
+
+So now, we can convert a monad `m a` into a `MaybeT m a` with `lift`, and we can also convert a `Maybe a` into a `MaybeT m a` with `hoistMaybe`.
+
+---
+
+# The complete program
+
+```haskell
+ensureValidUser :: MaybeT IO ()
+ensureValidUser = do 
+    name <- lift $ do 
+        putStr "enter your username: "
+        hFlush stdout
+        getLine
+    unless (name `elem` validUsers) $ do 
+        lift $ putStrLn "invalid user detected. exiting..."
+        hoistMaybe' Nothing
+    where 
+        validUsers = ["alice", "bob", "camille"]
+
+initializationRoutine :: MaybeT IO ()
+initializationRoutine = do
+    ensureValidUser
+    lift $ putStrLn "user is valid, proceeding with initialization..."
+-- vv we need to return () because runMaybeT returns a Maybe () instead of () 
+main = do runMaybeT initializationRoutine ; return ()
+```
+
+---
+
+# How does `MaybeT` work?
+
+We've seen that `MaybeT` is a `MonadTrans`, and that `Monad m => MonadTrans m`.
+
+So that means `MaybeT` also has to be a `Monad`. It has to support `>>` and `>>=`.
+
+What does `>>=` look like for `MaybeT`? Something like this:
+
+```haskell
+instance Monad m => Monad (MaybeT m) where
+    return x = MaybeT (return (just x)) 
+    (MaybeT m) >>= f = MaybeT $ do
+        result <- m
+        case result of
+            Nothing -> return Nothing
+            Just a -> runMaybe $ f a 
+```
+
+So `return` puts a monad that, given `x`, returns `Just x` inside the `MaybeT`.
+And bind will either create an `m` that either returns `Nothing` or runs depending on `m`.
+
+---
+
+# Questions?
+<!-- _class: invert questions -->
+
+---
+
+# Mixing and matching transformers
+
+Okay, that's an example of using *one* transformer. But when are we ever going to stop with just one?
+
+Let's take a look at combining `WriterT` *and* `MaybeT` together. Now we can log *and* early return.
+
+---
+
+# Mixing `WriterT` and `MaybeT`
+
+```haskell
+ensureValidUserLogging :: WriterT String (MaybeT IO) ()
+ensureValidUserLogging = do 
+    name <- lift $ lift $ do -- we'll clean up lift $ lift later 
+        putStr "enter your username: "
+        hFlush stdout
+        getLine
+    tell $ name ++ " attempted to log in...\n"
+    unless (name `elem` validUsers) $ do 
+        lift $ lift $ putStrLn "invalid user detected. exiting..."
+        tell "invalid user\n" -- we can "tell" without "lift": Writer is top 
+        lift $ hoistMaybe' Nothing -- now we "lift" to early return
+    tell "valid user\n"
+    where 
+        validUsers = ["alice", "bob", "camille"]
+```
+
+I know what you're thinking: "EW I do NOT like writing `lift $ lift`". Don't worry, we'll eliminate that later.
+
+---
+
+# Mixing `WriterT` and `MaybeT` (2)
+
+Now, let's see our new calling function and `main`:
+
+```haskell
+initializationRoutineLogging :: WriterT String (MaybeT IO) ()
+initializationRoutineLogging = do 
+    ensureValidUserLogging
+    lift $ lift $ putStrLn "user is valid, proceeding with initialization..."
+    tell "initializing\n"
+
+main = do
+    -- result is a Maybe((), String)
+    result <- runMaybeT $ runWriterT initializationRoutineLogging
+    case result of 
+        Just (res, log) -> putStrLn $ "log is: " ++ log 
+        Nothing -> putStrLn "we lost the log..."
+```
+
+We run our `runSomethingT` functions in reverse order. `runWriterT` takes a `WriterT`, so it goes first. It will return a `MaybeT`, which is why we call `runMaybeT` next.
+
+---
+
+# Transformer order matters
+
+Unfortunately, this result shows that something is wrong.
+
+Monad transformers create new monads that first, run the original monad (call the *inner monad*), and then inject their own data into the results. 
+
+For example, `MaybeT` makes its inner monad return a `Maybe a` when it used to return an `a`.
+
+And `WriterT` makes its inner monad return a `(a, w)`, where `w` is a monoid.
+That is, `newtype WriterT w m a = WriterT { runWriterT :: m (a, w) }`  
+
+The issue is, since `MaybeT` is the inner monad, when it is `Nothing`, it won't return anything. It won't keep the `w` log. It will lose it.
+
+---
+
+# A deferring transformer
+
+---
+
+# The Identity Monad
+
+---
+
+# The various monadic typeclasses
+
+--- 
+
+# Algebraic Effects
+
+---
+
+# Effects: a custom language within a language
+
+---
+
+# Metalanguages
+
+---
+
+# Conclusion
+
