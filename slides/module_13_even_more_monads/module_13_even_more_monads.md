@@ -859,30 +859,395 @@ We run our `runSomethingT` functions in reverse order. `runWriterT` takes a `Wri
 
 # Transformer order matters
 
-Unfortunately, this result shows that something is wrong.
+Unfortunately, this result shows that something is wrong. We *want* the log!
 
-Monad transformers create new monads that first, run the original monad (call the *inner monad*), and then inject their own data into the results. 
+Monad transformers create new monads that first, run the original monad (call the *inner monad*), and then lift the result into a new monad. 
 
-For example, `MaybeT` makes its inner monad return a `Maybe a` when it used to return an `a`.
+For example, `MaybeT` makes its inner monad return a `Maybe a` when it used to return an `a`. Its old result is lifted into a `Maybe`.
 
 And `WriterT` makes its inner monad return a `(a, w)`, where `w` is a monoid.
 That is, `newtype WriterT w m a = WriterT { runWriterT :: m (a, w) }`  
 
 The issue is, since `MaybeT` is the inner monad, when it is `Nothing`, it won't return anything. It won't keep the `w` log. It will lose it.
 
+So the `Just` case keeps the log, but we want the log no matter what!
+
 ---
 
-# A deferring transformer
+# Fixing it
+
+We can fix this by flipping the order. This is the wrong order:
+```haskell
+ensureValidUserLogging :: WriterT String (MaybeT IO) ()
+```
+
+We really want this:
+```haskell
+ensureValidUserLogging' :: MaybeT (WriterT String IO) ()
+```
+
+That is, instead of transforming a `Maybe` to return a `Writer`, we want to transform a `Writer` to return a `Maybe`. That way, we always have a monoid no matter what.
+
+Remember, a writer returns an `(a, w)` where `w` is a monoid. So now it returns `(Maybe a, w`). The `w` is always there.
+
+Knowledge check: Can you rewrite our functions before to use this new transformer?
+
+---
+
+# Knowledge check: transformers 1
+
+```haskell
+ensureValidUserLogging' :: MaybeT (WriterT String IO) ()
+ensureValidUserLogging' = do 
+    name <- lift $ lift $ do 
+        putStr "enter your username: "
+        hFlush stdout 
+        getLine 
+    lift $ tell $ name ++ " attempted to log in...\n"
+    unless (name `elem` validUsers) $ do 
+        lift $ lift $ putStrLn "invalid user detected. exiting..."
+        tell "invalid user\n"
+        hoistMaybe Nothing -- early return doesn't require a lift anymore
+    lift $ tell "valid user\n"
+    where 
+        validUsers = ["alice", "bob", "camille"]
+initializationRoutineLogging' :: MaybeT (WriterT String IO) ()
+initializationRoutineLogging' = do
+    ensureValidUserLogging'
+    lift $ lift $ putStrLn "user is valid, proceeding with initialization..."
+    tell "initializing\n"
+```
+
+---
+
+# Knowledge check: transformers 1, main
+
+```haskell
+main :: IO ()
+main = do
+    -- maybeResult is a WriterT String (IO (Maybe ()).
+    -- That is, it's a writer that always has its state available, 
+    -- but can optionally return another result. 
+    let maybeResult = runMaybeT initializationRoutineLogging'
+    -- writerResult is an IO (Maybe(), String).
+    let writerResult = runWriterT maybeResult 
+    -- now we can bind, because we're binding an IO in an IO. 
+    ioResult <- writerResult -- we can actually bind this one
+    let (earlyReturnStatus, log) = ioResult
+    -- we could have done runWriterT $ runMaybeT $ ... similar to before
+    if isNothing earlyReturnStatus
+        then putStrLn "initialization did not complete due to errors."
+        else putStrLn "initialization was successfull..."
+    -- we have the log no matter what now
+    putStrLn "Authentication log:"
+    putStrLn log 
+```
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
+# I have a question!
+
+Previously we had a `MaybeT (WriterT String IO) ()`, which was basically a  `IO (Maybe (), String)` (after going through all the substitutions)
+
+Why can't I just use that!? Just define an `IO (Maybe (), String)`. The `String` stores the log. The `Maybe ()` stores the early return.
+
+Seems like we get everything we want! What's missing?
+
+---
+
+# The binds are missing
+
+The issue is, binding `IO` doesn't handle the log or early return.
+
+Suppose we have this:
+```haskell
+someEarlyReturningThing :: IO (Maybe ())
+someLoggingThing :: IO String
+someOtherLoggingThing :: IO String
+someCombinedThing :: IO (Maybe (), String)
+someCombinedThing = do 
+    result <- doTheEarlyReturningThing
+    log1 <- someLoggingThing
+    log2 <- someOtherLoggingThing
+    return (result, log1 <> log2)
+```
+
+Notice: we didn't actually early return if `result` was value. `IO` does not ever early return. We also had to manually combine the logs with `<>`, instead of using `Writer`!
+
+---
+
+# The real point of monad transformers
+
+When we use monads, we don't just want a computation. Those are easy to represent as ordinary functions.
+
+What we really want is some kind of "threaded effect". Some kind of feature that is associated with every statement in the combined monad.
+
+We want these statements to automatically be combined together respecting the feature. Early returns short circuit the rest of the logic. Writers maintain a constant log. Readers maintain an environment. These features are "threaded in" between each statement. 
+
+---
+
+# Why monad transformers "modify" the inner monad
+
+We transform monads by changing their return type. We don't just "hoist" the monad into a new environment.
+
+`MaybeT (WriterT String IO) ()` is an `IO` which will have a monoid injected into its return type, which will then be wrapped in a `Maybe`. 
+
+Why not define the `T`'s backwards? `IOOf (WriterOf String Maybe) ()`
+If we did it this way, an `IOOf` would have to have some universal way to run its inner monads. There happens to be one for `Writer` and `Maybe`, but it would mean nothing could "contain" an `IOOf`, because we can't safely run an `IO` and pull the result out.
+
+Basically, it would only work for some monads.
+
+---
+
+# Using the new transformer
+
+Now it's time to address two things:
+1. There is no way Haskell programmers, famously terse, actually write `lift $ lift $ lift $ ...` *ad infinitum* all the time
+2. Do we seriously have to change everything around every time we want to change the order? Sometimes it makes sense to have `MaybeT (Writer ...)` and sometimes it's better to have a `WriterT ... Maybe` (when we want the early return to wipe out the log). 
+
+We can solve both these issues at the same time, and have much nicer, more flexible, less "lifty" code.
+
+---
+
+# The monadic typeclasses
+
+If you've been looking through the documenation for different monads, you've probably noticed that it's organized differently than in the slides.
+
+For example, if you go look at the `Writer` documentation [here](https://hackage-content.haskell.org/package/mtl-2.3.2/docs/Control-Monad-Writer-Lazy.html)...
+
+You see that the top definition is not the `Writer` type. It's a typeclass called `MonadWriter`. 
+
+And if you keep scrolling down, you find it, but it's defined in terms of `WriterT`!
+```haskell
+type Writer w = WriterT w Identity
+```
+
+What is `Identity`, and where did `Writer` go? It's just the Haskell equivalent of a `typedef`.
+
+---
+
+# The monadic typeclasses (2)
+
+The logic here is that we want `Writer` and `WriterT` to support the same operations. 
+
+We don't want to have to copy all the functions they need. It would be annoying if we used `tell` for `Writer`, but `tellT` for `WriterT`. 
+
+That would also make it so that if we refactored our code from a `MaybeT (Writer Log) ()` to a `WriterT Log Maybe ()`, we would have to change all the functions.
+
+So instead, we define a typeclass that has all the useful combinators. All the `Writer` functions, such as `tell` are in the typeclass.
+
+Then, we make both `Writer` and `WriterT` both be instances of this typeclass. This way, `tell` will work for both of them!
 
 ---
 
 # The Identity Monad
 
+The identity monad is a monad that just represents a value `a`.
+
+It's defined something like this: `data Identity a = Identity { runIdentity :: a }`
+
+It doesn't do anything useful. It only exists so that when a higher-kinded type, such as a monad transformer, *needs* a monad as one of their parameters, you can say "actually, I don't want it to do anything".
+
+This is why `Writer` is defined as `WriterT w Identity`. We've already gone through the trouble of defining `WriterT`, which has all the bind behavior in it and works on any inner monad.
+
+So now, we just say "a `Writer` is when that inner monad doesn't do anything, it just returns the log". Now there's no special behavior. We end up with a plain `Writer`.
+
 ---
 
-# The various monadic typeclasses
+# The monadic typeclasses (3)
+
+This pattern repeats for almost every monad. 
+
+There is a typeclass whose name starts with `Monad...` that defines all the useful combinators, then a transformer (except for `IO` which has no transformer) and then the actual monad itself. If the transformer exists, the monad is usually defined as just `WhateverT (...other params...) Identity`.
+
+And it turns out, we can use this pattern to dramatically simplify our code.
+
+---
+
+# MonadIO
+
+First, if you visit the [`IO` monad documentation](https://hackage-content.haskell.org/package/base-4.22.0.0/docs/Control-Monad-IO-Class.html), you'll see that there's a typeclass called `MonadIO`, which has a single combinator, `liftIO`.
+
+This function just pulls an `IO` into any monad that implements `MonadIO`.
+
+Why is that useful? Because pretty much every transformer implements `MonadIO`.
+
+For example, from `Control.Monad.Trans`:
+```haskell
+instance (MonadIO m) => MonadIO (WriterT w m) where
+    liftIO = lift . liftIO
+```
+
+So anytime the inner monad `m` supports `liftIO`, the outer monad also supports it.
+
+Therefore, we can do any number of `lift`s for `IO` all at once, with one `liftIO`. 
+
+---
+
+# Example of nicer code with `liftIO`
+
+```haskell
+ensureValidUserLogging' :: MaybeT (WriterT String IO) ()
+ensureValidUserLogging' = do 
+    name <- liftIO $ do 
+        putStr "enter your username: "
+        hFlush stdout 
+        getLine 
+    lift $ tell $ name ++ " attempted to log in...\n"
+    unless (name `elem` validUsers) $ do 
+        liftIO $ putStrLn "invalid user detected. exiting..."
+        tell "invalid user\n"
+        hoistMaybe Nothing -- early return doesn't require a lift anymore
+    lift $ tell "valid user\n"
+    where 
+        validUsers = ["alice", "bob", "camille"]
+```
+
+Notice, no more `lift $ lift $ ...`, and so on. `liftIO` handles that for us. Because `WriterT ... IO` is a `MonadIO`, and `MaybeT (some MonadIO)` is also one.
+
+---
+
+# But it's still not *that* nice...
+
+There are still a lot of `lifts` in that code...
+
+And it's still very finicky. If we swap the order of the transformers, it wouldn't work anymore because we'd have to remove a layer of lifts around some combinator calls, but add a new layer of lifts around others.
+
+Luckily, we can use those fancy `MonadX` typeclasses to write truly flexible and *effectful* code.
+
+Here's an example of a proper version of the previous functions...
+
+---
+
+# Using the monadic typeclasses
+
+```haskell
+ensureValidUserLogging'' :: (MonadWriter String m, MonadIO m, Alternative m) => m ()
+ensureValidUserLogging'' = do 
+    name <- liftIO $ do 
+        putStr "enter your username: "
+        hFlush stdout 
+        getLine
+    tell $ name ++ " attempted to log in...\n"
+    unless (name `elem` validUsers) $ do 
+        liftIO $ putStrLn "invalid user detected. exiting..."
+        tell "invalid user\n"
+        empty 
+    tell "valid user\n"
+    where 
+        validUsers = ["alice", "bob", "camille"]
+
+initializationRoutineLogging'' :: (MonadWriter String m, MonadIO m, Alternative m) => m ()
+initializationRoutineLogging'' = do 
+    ensureValidUserLogging''
+    liftIO $ putStrLn "user is valid, proceeding with initialization..."
+    tell "initializing\n"
+```
+
+---
+
+# Some notes about that code
+
+Notice that we're no longer writing a particular monad.
+
+Instead, we're saying, "these actions can be embedded in any monad, as long as it is a `MonadIO`, a `MonadWriter`, and an `Alternative`.
+
+`Alternative` is the typeclass that can handle early returns. The name represents the idea of "we can have one or more results, or maybe nothing at all". `MaybeT` and `Maybe` are both instances of `Alternative`. `empty` is the combinator that represents "early return" when we're using `MaybeT`.
+
+(it's not called `MonadMaybe` because it also works with parsers)
+
+So instead of creating a concrete monad stack. We're saying "here is a program of any monad, as long as that monad supports these features: early return, logging, and IO.
+
+---
+
+# What about main?
+
+Believe it or not, `main` doesn't need to change at all:
+```haskell
+(earlyReturn, log) <- runWriterT $ runMaybeT initializationRoutineLogging''
+
+    if isNothing earlyReturn
+        then putStrLn "initialization did not complete due to errors."
+        else putStrLn "initialization was successfull..."
+    
+    putStrLn "Authentication log:"
+    putStrLn log 
+```
+
+Because we're saying `runWriterT $ runMaybeT ...`, Haskell's type inference knows that the return type of `initializationRoutineLogging''` needs to be `MaybeT (WriterT ... IO) ()`. It then further figures out the monoid is a `String`, because we're using `log` as a `String`. 
+
+---
+
+# What if we swapped the result?
+
+What if we did this?
+
+```haskell
+result <- runMaybeT $ runWriterT initializationRoutineLogging''
+```
+
+Notice, now it's `runMaybeT $ runWriterT ...` instead of `runWriterT $ runMaybeT ...`
+
+Believe it or not, this works fine. Our function's type just said "I can convert these operations into any monad, as long as it supports early returns, logging, and IO". 
+
+`MaybeT (WriterT String IO) ()` and `WriterT String (MaybeT IO) ()` both work!
+
+However, we still have the constraint that we identified before:
+```haskell
+putStrLn $ case result of 
+    Nothing -> "initialization failed, but there's no log now!"
+    Just (result, log) -> "Authentication log: " ++ log 
+```
+
+---
+
+# We let the user decide
+
+We did something cool just now without meaning to: we made it up to the user whether or not the log survives a failed login attempt.
+
+Do we want the log? Probably. But the code will work either way, so the user can now decide what kind of return value they get. We have written a sub-routine in an *abstract programming language*, and let the user decide specifically how it gets executed!
+
+Oh, one more thing. Let's alias all our constraints so we don't have to type them:
+```haskell
+type AppMonad m = (MonadWriter String m, MonadIO m, Alternative m)
+```
+
+Now our main app control functions can be declared like:
+```haskell
+initializationRoutine :: AppMonad m => m ()
+```
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
+# Nice exception handling
+
+Remember when we learned that `Either e` is a monad, and it supports early returns which don't just return, but also carry an error?
+
+Its monad transformer isn't called `EitherT` for some reason, but rather `ExceptT`. The new name makes sense: it adds exception handling support to a monad.
+
+The typeclass is called `MonadError` instead of `MonadExcept` like you would expect. I'm not sure why this particular monad is so irregular in its naming.
+
+
+
+---
+
+# A deferring transformer
 
 --- 
+
+
 
 # Algebraic Effects
 
