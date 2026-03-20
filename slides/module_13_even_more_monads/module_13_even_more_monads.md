@@ -1756,7 +1756,7 @@ It's called *Algebraic Effects*. [Haskell supports it too](https://hackage.haske
 
 # Algebraic effects (2)
 
-The basic idea is that instead of creating a monad transformer, you create a data type that encodes the operations you are interested in. For a `State` effect, we could create a type like [this](https://github.com/fused-effects/fused-effects/blob/main/docs/defining_effects.md):
+The basic idea is that instead of creating a monad transformer, you create a data type that encodes the operations you are interested in. For a basic IO effect, we could create a type like [this](https://github.com/fused-effects/fused-effects/blob/main/docs/defining_effects.md):
 
 ```haskell
 data Teletype (m :: Type -> Type) k where
@@ -1785,7 +1785,7 @@ instance (MonadIO m, Algebra sig m) => Algebra (Teletype :+: sig) (TeletypeIOC m
     R other     -> TeletypeIOC (alg (runTeletypeIO . hdl) other ctx)
 ```
 
-Don't worry too much about understanding this. Focus on the fact that this algebra can be "injected" into a tree of types (the `:+:` is a type constructor for these) and it does the operations it recognizes. It then leaves other operations to other algebras (the `R other` part). 
+Don't worry too much about understanding this. Focus on the fact that this algebra can be "injected" into a set of types (the `:+:` is a type constructor for these) and it does the operations it recognizes. It then leaves other operations to other algebras (the `R other` part). 
 
 ---
 

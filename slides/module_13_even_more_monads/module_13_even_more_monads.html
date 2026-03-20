@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>module_13_even_more_monads</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="programming-language-design">Programming Language Design</h1>
+<h2 id="module-13-even-more-monads">Module 13: Even More Monads</h2>
+<p><br> <br></p>
+<p>Slides © Grant Williams, <a
+href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA
+4.0</a>.</p>
+<p><br></p>
+<p>This is an open educational resource. Feel free to submit fixes,
+improvements, and new material <a
+href="https://github.com/grantwill74/notes-on-programming-language-design">here</a>.</p>
+<hr />
+<h1 id="last-module">Last module</h1>
+<p>We learned <em>more</em> monads.</p>
+<p>Which ones did we learn? Can anyone list all the monads we know?</p>
+<details>
+<summary>
+Click here to reveal
+</summary>
+<ul>
+<li>
+IO
+</li>
+<li>
+Maybe
+</li>
+<li>
+Either a
+</li>
+<li>
+[]
+</li>
+<li>
+Reader a
+</li>
+<li>
+Writer w
+</li>
+</ul>
+</details>
+<hr />
+<h1 id="this-module">This module</h1>
+<p>Monads are cool, they are each like mini-programming languages that
+have their own custom features.</p>
+<p>Each time we make a new language, we define it in terms of a monad. A
+monad represents a statement, a command. When we create the
+<code>Applicative</code> and <code>Monad</code> instances, we define
+what it means to sequence two of these statements to achieve complex
+behavior.</p>
+<p>But monads are all separate languages. They all have useful features,
+but they don’t combine with each other.</p>
+<p>In this module, we will learn about <em>Monad Transformers</em>,
+which are basically monad builders. We can use them to mix and match the
+features we want.</p>
+<p>But first, let’s combine reading and writing into one monad manually
+with <code>State</code>…</p>
+<hr />
+<h1 id="what-if-i-need-reading-and-writing">What if I need reading and
+writing?</h1>
+<p>We can add write-only accumulators to the language with
+<code>Writer</code>. But we can’t actually retrieve the value during the
+execution of the writer.</p>
+<p>And we can add global read-only data with <code>Reader</code>.</p>
+<p>But what if we want fully imperative code with a value that we can
+read <em>and</em> write.</p>
+<p>This brings us to what is IMO the most complex built-in
+<code>Monad</code>: <code>State</code>.</p>
+<p>Using this monad, we gain access to fully imperative code with some
+read/write state.</p>
+<p>Does this require breaking the language? No. The state is treated in
+such a way that behind the scenes, everything is purely functional.
+However, we can pretend that there is read/write data.</p>
+<hr />
+<h1 id="first-why">First: why?</h1>
+<p>Let’s imagine I have a programming language. It has this AST</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Expr</span> <span class="ot">=</span> <span class="dt">Ct</span> <span class="op">|</span> <span class="dt">Cf</span> <span class="op">|</span>  <span class="co">-- &lt;- constant true and constant false values</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>            <span class="dt">If</span> {<span class="ot"> cond ::</span> <span class="dt">Expr</span>,<span class="ot"> true ::</span> <span class="dt">Expr</span>,<span class="ot"> false ::</span> <span class="dt">Expr</span> } <span class="op">|</span>  </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>            <span class="dt">While</span> {<span class="ot"> cond ::</span> <span class="dt">Expr</span>,<span class="ot"> body ::</span> <span class="dt">Expr</span> } <span class="op">|</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Set</span> {<span class="ot"> name ::</span> <span class="dt">String</span>,<span class="ot"> value ::</span> <span class="dt">Expr</span> } <span class="op">|...--</span>(strings<span class="op">?</span> numbers<span class="op">?</span> etc<span class="op">.</span>)</span></code></pre></div>
+<p>Suppose I want to write the code to parse an <code>if</code>
+statement in my language. Maybe it looks something like:</p>
+<pre><code>if x == 20 then 
+    &quot;it&#39;s 20&quot;
+else 
+    &quot;it wasn&#39;t 20&quot;
+end</code></pre>
+<hr />
+<h1 id="writing-the-parser">Writing the parser</h1>
+<p>To parse an <code>if</code> expression in our language, we need to
+find the keyword <code>if</code>, followed by an expression, followed by
+<code>then</code> followed by another expression, followed by
+<code>else</code>, followed by yet another expression, followed by
+<code>end</code>.</p>
+<p>Here is a sketch of what it might look like (token constructors start
+with <code>T</code>):</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseIf ::</span> [<span class="dt">Token</span>] <span class="ot">-&gt;</span> (<span class="dt">Expr</span>, [<span class="dt">Token</span>]) <span class="co">-- returns the if and the remaining tokens</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>parseIf (<span class="dt">TIf</span> <span class="op">:</span> rest) <span class="ot">=</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (condition, rest&#39;) <span class="ot">=</span> parseExpression rest</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">TThen</span> <span class="op">:</span> rest&#39;&#39;) <span class="ot">=</span> rest&#39;</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        (trueExp, rest&#39;&#39;&#39;) <span class="ot">=</span> parseExpression rest&#39;&#39;</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">TElse</span> <span class="op">:</span> rest&#39;&#39;&#39;&#39;) <span class="ot">=</span> rest&#39;&#39;&#39;</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        (falseExp, rest&#39;&#39;&#39;&#39;&#39;) <span class="ot">=</span> parseExpression rest&#39;&#39;&#39;&#39;</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">TEnd</span> <span class="op">:</span> rest&#39;&#39;&#39;&#39;&#39;&#39;) <span class="ot">=</span> rest&#39;&#39;&#39;&#39;&#39;</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">in</span>  (<span class="dt">If</span> condition trueExp falseExp, rest&#39;&#39;&#39;&#39;&#39;&#39;) <span class="co">-- that&#39;s 6 &quot;&#39;&quot;&#39;s. Yikes!</span></span></code></pre></div>
+<hr />
+<h1 id="yikes">Yikes!</h1>
+<p>I hope I don’t have to say why this is suboptimal…</p>
+<p>Yeah, the issue here is that every time we “change” the token stream
+by reading some tokens from it, we have to pass forward the modified
+version.</p>
+<p>And heaven forbid you forget one of those “primes” (<code>'</code>s).
+Now you have a bug!</p>
+<p>Luckily, we can use the <code>State</code> monad to fix this. A
+<code>State s a</code> is a program that is allowed to make use of an
+<code>s</code>, and then it will return an <code>a</code>. Internally,
+it looks like this:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">State</span> s a <span class="ot">=</span> {<span class="ot"> runState ::</span> s <span class="ot">-&gt;</span> (a, s) } </span></code></pre></div>
+<p>It’s a function that takes a state and returns a result value and a
+new state. This is a little tough, so let’s see the code first, and then
+we’ll talk about how it works…</p>
+<hr />
+<h1 id="getting-tokens">Getting tokens</h1>
+<p>First, let’s write a little helper function to extract tokens and see
+<code>State</code> in action:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Lazy</span>  <span class="co">-- this is how we import the state monad</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ot">expectToken ::</span> <span class="dt">Token</span> <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Token</span>] ()</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>expectToken tok <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    tokens <span class="ot">&lt;-</span> get <span class="co">-- produces a monad whose result is its state </span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> <span class="fu">null</span> tokens <span class="op">||</span> <span class="fu">head</span> tokens <span class="op">/=</span> tok </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;expected &quot;</span> <span class="op">++</span> <span class="fu">show</span> tok</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> put <span class="op">$</span> <span class="fu">tail</span> tokens <span class="co">-- replaces the current state with its tail</span></span></code></pre></div>
+<p>This function takes a token that it will “expect” to be the next
+token. It returns a state program that will then “get” the current state
+(which is a list of tokens). Then, it either crashes the program with an
+<code>error</code>, or it replaces the state with its own tail (removing
+the token).</p>
+<p>Understanding <code>get</code> and <code>put</code> are key to
+understanding <code>State</code>, so let’s zoom in…</p>
+<hr />
+<h1 id="get-and-put-detour"><code>get</code> and <code>put</code>
+detour</h1>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">get ::</span> <span class="dt">State</span> s s <span class="co">-- returns a State monad that just returns its own state</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ot">put ::</span> s <span class="ot">-&gt;</span> <span class="dt">State</span> s () <span class="co">-- produce a State monad with the given state</span></span></code></pre></div>
+<p>Here is some more intuition to help us understand monads in general
+and <code>State</code> in particular. Monads are containers that either
+store a result value or another computation that leads to a result
+value. There is always a result type.</p>
+<p>The result type is the last part of a monad’s type. So: - an
+<code>IO Int</code> is an input-output program that returns an
+<code>Int</code> - a <code>Maybe Float</code> is a program that, if it
+produces anything, will produce a <code>Float</code> - a
+<code>Writer (Sum Int) String</code> is a program that writes to a
+<code>Sum Int</code> monoid, and then produces a <code>String</code></p>
+<hr />
+<h1 id="get-and-put-2"><code>get</code> and <code>put</code> (2)</h1>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">get ::</span> <span class="dt">State</span> s s <span class="co">-- returns a State monad that just returns its own state</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ot">put ::</span> s <span class="ot">-&gt;</span> <span class="dt">State</span> s () <span class="co">-- produce a State monad with the given state</span></span></code></pre></div>
+<p>The first type argument of a <code>State</code> is the type of the
+state it stores. So <code>State String Int</code> is a program which
+stores a read/write <code>String</code>, and then returns an
+<code>Int</code>.</p>
+<p>The <code>get</code> function therefore is a <code>State</code> monad
+whose result type is the same as its state type. It returns its own
+state so we can access it within another state.</p>
+<p>The <code>put</code> function takes a state value of type
+<code>s</code>, and it produces a <code>State</code> which will use that
+value for its state. The resulting state does not return anything useful
+<code>()</code>.</p>
+<hr />
+<h1 id="basic-get-and-put-example-3">Basic <code>get</code> and
+<code>put</code> example (3)</h1>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ot">doubleIfEven ::</span> <span class="dt">State</span> <span class="dt">Int</span> () </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>doubleIfEven <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> get <span class="co">-- `get` produces a program which results in its state. Bind its result to x</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> x <span class="ot">`mod`</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> put <span class="op">$</span> <span class="dv">2</span> <span class="op">*</span> x</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="fu">return</span> () <span class="co">-- return () is a program which does not change its state</span></span></code></pre></div>
+<p>What is the state that we’re getting? We don’t know.
+<code>State</code> does not actually store a state. It simply has the
+ability to query a state that is given to it. In this way, it works the
+same way as <code>Reader</code>. <code>get</code> is like
+<code>ask</code>: query whatever value was passed to me.</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> runState doubleIfEven <span class="dv">20</span> <span class="co">-- returns ((), 40)</span></span></code></pre></div>
+<p>In the above, we provide the starting state of <code>20</code> to
+<code>runState</code>. The program then <code>get</code>s it, so
+<code>x</code> is 20, and then replaces the state with
+<code>2 * x == 40</code>.</p>
+<hr />
+<h1 id="getput-knowledge-check"><code>get</code>/<code>put</code>
+Knowledge Check</h1>
+<ol type="1">
+<li><p>Write <code>subtract1IfOdd</code> in the same fashion as the
+above. Test it, too.</p></li>
+<li><p>Modify your <code>subtract1IfOdd</code> program so that not only
+does it subtract 1 from the state if the state is odd, but it also
+results in that value (i.e., returns it).</p></li>
+<li><p>How does that change what gets printed when you
+<code>runState</code>?</p></li>
+</ol>
+<hr />
+<h1 id="getput-kc-answers"><code>get</code>/<code>put</code> KC
+answers</h1>
+<ol type="1">
+<li></li>
+</ol>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">subtract1ifOdd ::</span> <span class="dt">State</span> <span class="dt">Int</span> ()</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>subtract1ifOdd <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> get </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    when (<span class="fu">odd</span> x) (put <span class="op">$</span> x <span class="op">-</span> <span class="dv">1</span>) <span class="co">-- let&#39;s use the nice &#39;when&#39; function</span></span></code></pre></div>
+<ol start="2" type="1">
+<li></li>
+</ol>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ot">subtract1ifOdd&#39; ::</span> <span class="dt">State</span> <span class="dt">Int</span> <span class="dt">Int</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>subtract1ifOdd&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> get </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    when (<span class="fu">odd</span> x) (put <span class="op">$</span> x <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    get </span></code></pre></div>
+<ol start="3" type="1">
+<li>We get <code>(6, 6)</code> instead of <code>((), 6)</code>, because
+now there is a return value.</li>
+</ol>
+<hr />
+<h1 id="combining-states">Combining states</h1>
+<p>Remember that monads, intuitively, are little programs.</p>
+<p>We can combine two programs together with <code>&gt;&gt;</code> or by
+putting them on adjacent <code>do</code> lines.</p>
+<p>So <code>subtract1ifOdd &gt;&gt; doubleIfEven</code> is a program
+that, first, if its state is odd, subtracts one from it, and then
+doubles its state (which is guaranteed to be even at that point).</p>
+<p>Observe:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="fu">print</span> <span class="op">$</span> runState (subtract1ifOdd <span class="op">&gt;&gt;</span> doubleIfEven) <span class="dv">33</span> <span class="co">-- returns ((), 64)</span></span></code></pre></div>
+<p>We can also name this program:</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>subtract1ifOddThenDouble <span class="ot">=</span> <span class="kw">do</span>  <span class="co">-- the type of this `do` is `State Int ()`</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    subtract1ifOdd</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    doubleIfEven</span></code></pre></div>
+<hr />
+<h1 id="questions">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="back-to-parsing">Back to parsing</h1>
+<p>Now that we understand how to use state a little better, let’s go
+back to the function we were working on to help us expect a token:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">Control.Monad.State.Lazy</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ot">expectToken ::</span> <span class="dt">Token</span> <span class="ot">-&gt;</span> <span class="dt">State</span> [<span class="dt">Token</span>] ()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>expectToken tok <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    tokens <span class="ot">&lt;-</span> get <span class="co">-- produces a monad whose result is its state </span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> <span class="fu">null</span> tokens <span class="op">||</span> <span class="fu">head</span> tokens <span class="op">/=</span> tok </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;expected &quot;</span> <span class="op">++</span> <span class="fu">show</span> tok</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> put <span class="op">$</span> <span class="fu">tail</span> tokens <span class="co">-- replaces the current state with its tail</span></span></code></pre></div>
+<p><code>expectToken</code> is a function that takes a token, then
+produces a program that will either pull that token from the token
+stream or crash with an error. (we’ll learn later how to combine
+<code>Either</code> error handling with <code>State</code> so it doesn’t
+have to crash)</p>
+<hr />
+<h1 id="parsing-with-state-2">Parsing with <code>State</code> (2)</h1>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseIf&#39; ::</span> <span class="dt">State</span> [<span class="dt">Token</span>] <span class="dt">Expr</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>parseIf&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TIf</span> <span class="co">-- use `expectToken` to make sure there&#39;s a TIf, and pop it</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    condition <span class="ot">&lt;-</span> parseExpression&#39; <span class="co">-- this `State` returns an expression for us</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TThen</span> </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    trueExp <span class="ot">&lt;-</span> parseExpression&#39;</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TElse</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    falseExp <span class="ot">&lt;-</span> parseExpression&#39;</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TEnd</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">If</span> condition trueExp falseExp</span></code></pre></div>
+<p>Assuming we have a
+<code>parseExpression' :: State [Token] Expr</code> this is a nice,
+clean <code>State</code> program that will parse an <code>If</code>
+expression for us.</p>
+<p>How would we write <code>parseExpression'</code>?</p>
+<hr />
+<h1 id="parsing-with-state-3">Parsing with <code>State</code> (3)</h1>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseExpression&#39; ::</span> <span class="dt">State</span> [<span class="dt">Token</span>] <span class="dt">Expr</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>parseExpression&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    next <span class="ot">&lt;-</span> <span class="fu">head</span> <span class="op">&lt;$&gt;</span> get  </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> next <span class="kw">of</span> </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">TTrue</span> <span class="ot">-&gt;</span> modify <span class="fu">tail</span> <span class="op">&gt;&gt;</span> <span class="fu">return</span> <span class="dt">Ct</span> <span class="co">-- I only have true and false values</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">TFalse</span> <span class="ot">-&gt;</span> modify <span class="fu">tail</span> <span class="op">&gt;&gt;</span> <span class="fu">return</span> <span class="dt">Cf</span> <span class="co">-- right now. </span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">TIf</span> <span class="ot">-&gt;</span> parseIf&#39; </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        other <span class="ot">-&gt;</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;parsing expression, unexpected token: &quot;</span> <span class="op">++</span> <span class="fu">show</span> other</span></code></pre></div>
+<ol type="1">
+<li>Remember that monads are also functors.
+<code>head &lt;$&gt; get</code> is a monad that returns the head of
+whatever <code>get</code> returned.</li>
+<li><code>modify</code> is a function that applies the given function to
+the state and replaces it. <code>modify tail</code> is the same as
+<code>do { x &lt;- get ; put $ tail x }</code></li>
+<li>We use <code>&gt;&gt;</code> to produce a new state program. First,
+modify, then return <code>Ct</code>.</li>
+</ol>
+<hr />
+<h1 id="state-knowledge-check-2">State knowledge check 2</h1>
+<ol type="1">
+<li><p>Define the modify function. Its type is
+<code>modify :: (s -&gt; s) -&gt; State s ()</code></p></li>
+<li><p>Suppose there was also a <code>TWhile</code> token and a
+<code>While { cond :: Expr, body :: Expr }</code> constructor. Define
+<code>parseWhile :: State [Token] Expr</code>.</p></li>
+<li><p>Test out your code with a token stream. You can use
+<code>runState</code> to actually run a state program on a given state.
+It will return the resulting state and value. You’ll also need to add
+<code>TWhile</code> and <code>TDo</code> tokens and modify
+<code>parseExpression'</code>.</p></li>
+</ol>
+<hr />
+<h1 id="state-kc-2-answers">State KC 2 answers</h1>
+<ol type="1">
+<li></li>
+</ol>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>modify f <span class="ot">=</span> <span class="kw">do</span> { x <span class="ot">&lt;-</span> get ; put <span class="op">$</span> f x } <span class="co">-- or </span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>modify f <span class="ot">=</span> f <span class="op">&lt;$&gt;</span> get <span class="op">&gt;&gt;=</span> put</span></code></pre></div>
+<ol start="2" type="1">
+<li></li>
+</ol>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseWhile ::</span> <span class="dt">State</span> [<span class="dt">Token</span>] <span class="dt">Expr</span> </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>parseWhile <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TWhile</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    condition <span class="ot">&lt;-</span> parseExpression&#39;</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TDo</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    body <span class="ot">&lt;-</span> parseExpression&#39;</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    expectToken <span class="dt">TEnd</span> </span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="op">$</span> <span class="dt">While</span> condition body </span></code></pre></div>
+<hr />
+<h1 id="state-kc-2-answers-2">State KC 2 answers (2)</h1>
+<ol start="3" type="1">
+<li></li>
+</ol>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> <span class="op">$</span> runState parseExpression&#39;</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        [<span class="dt">TWhile</span>,<span class="dt">TTrue</span>,<span class="dt">TDo</span>,<span class="dt">TFalse</span>,<span class="dt">TEnd</span>,<span class="dt">TIf</span>,<span class="dt">TTrue</span>,<span class="dt">TThen</span>,<span class="dt">TFalse</span>,<span class="dt">TElse</span>,<span class="dt">TTrue</span>,<span class="dt">TEnd</span>,<span class="dt">TTrue</span>,<span class="dt">TFalse</span>]</span></code></pre></div>
+<p>Results in
+<code>(While {cond = Ct, body = Cf},[TIf,TTrue,TThen,TFalse,TElse,TTrue,TEnd,TTrue,TFalse])</code></p>
+<p>If I run <code>(parseExpression' &gt;&gt; parseExpression')</code>, I
+get
+<code>(If {cond = Ct, trueExp = Cf, falseExp = Ct},[TTrue,TFalse])</code></p>
+<p>We first parsed the while-expression, then we threw away the result
+and parsed the if. We were left with a couple of random tokens in the
+stream that I put there afterward.</p>
+<p>Practice: how would we avoid throwing away the results?</p>
+<hr />
+<h1 id="questions-1">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="how-is-state-implemented">How is state implemented?</h1>
+<p>State has the most complex monad implementation we’ve seen. Remember
+that a state is secretly implemented as a function from a state type
+<code>s</code> to a tuple <code>(a, s)</code></p>
+<p>Here is what it needs to do: 1. The simplest <code>State</code> is
+one that ignores its <code>s</code> and gives a constant value for
+<code>a</code>. 2. If I have two states, I combine them as follows: 1.
+First, we define a function that takes an <code>s</code>… 2. It will run
+the first state on it to get an <code>(a, s)</code> 3. Then, run the
+second state on the output of the first state’s <code>s</code> value 4.
+The resulting function is what we return.</p>
+<p>This is how <code>&gt;&gt;</code> works. <code>&gt;&gt;=</code> is
+similar, but the second state can depend on <code>a</code>.</p>
+<hr />
+<h1 id="the-state-monad-instance">The state <code>Monad</code>
+instance</h1>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> (<span class="dt">State</span> s) <span class="kw">where</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> x <span class="ot">=</span> <span class="dt">State</span> <span class="op">$</span> (\s <span class="ot">-&gt;</span> (x, s)) <span class="co">-- notice that this function preserves s</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    s1 <span class="op">&gt;&gt;=</span> f <span class="ot">=</span> <span class="dt">State</span> <span class="op">$</span> \s <span class="ot">-&gt;</span> <span class="co">-- a State is always a function inside</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (a1, s1&#39;) <span class="ot">=</span> runState s1 s <span class="co">-- execute state 1, get the new state</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>            s2 <span class="ot">=</span> f a1 <span class="co">-- use the function to produce a second state from result</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">in</span>  runState s2 s1&#39; <span class="co">-- run the second state with the result state  </span></span></code></pre></div>
+<p>Frankly, when I was learning Haskell, I found this brutally hard to
+understand. I found it easier when I was already using state to go back
+and understand the bind definition. This is why we started with code
+rather than the <code>Monad</code> instance.</p>
+<p>Fundamentally, the <code>&gt;&gt;=</code> must produce a new
+<code>State</code>. It defines a function, which takes an initial
+<code>s</code>, runs the left state on it, uses the result of that to
+generate another state, then executes that state on the intermediate
+state value.</p>
+<hr />
+<h1 id="i-know-what-youre-thinking">I know what you’re thinking…</h1>
+<p>No, I’m not going to test you on the <code>State</code> monad. It’s
+just a little too hard to be fair at this point in your undergraduate
+career.</p>
+<p>However, if you study it, it will help you. <code>State</code> is
+like a combination of <code>Reader</code> and <code>Writer</code>, and I
+am allowed to test you on those.</p>
+<p>Remember that <code>Reader r a</code> is a <code>r -&gt; a</code>
+<code>Writer w a</code> is a <code>(a, w)</code> So it makes sense that
+<code>State s a</code> is a <code>s -&gt; (a, s)</code></p>
+<hr />
+<h1 id="questions-2">Questions?</h1>
+<!-- _class: questions invert -->
+<hr />
+<h1 id="monads-allow-customizing-the-language">Monads allow customizing
+the language</h1>
+<p>With monads, we have unlocked a lot of cool things. We can add new
+features like: * System-level side effects and promises (IO) * Early
+returns (Maybe) * Exception handling (Either) (but in an orderly way:
+exceptions as values) * Non-determinism (List) * Dependency Injection
+(Reader) * Logging and accumulation (Writer) * Direct Imperative
+programming (State)</p>
+<p>These are things that are awkward or impossible with pure function
+calls.</p>
+<hr />
+<h1 id="using-monads">Using monads</h1>
+<p>Some of these monads have <em>combinators</em> that are designed to
+make the monad’s features available: * <code>print</code>,
+<code>putStr</code>, <code>getLine</code>, etc. for <code>IO</code> *
+<code>ask</code> for <code>Reader</code>, <code>tell</code> for
+<code>Writer</code> * <code>get</code>, <code>put</code>, and
+<code>modify</code> for <code>State</code> * We can make our own for
+<code>Maybe</code>’s early returns:
+<code>abortIf c = when c Nothing</code></p>
+<p>Some combinators work for any monad, such as <code>when</code> and
+<code>forM</code>.</p>
+<p>But there’s a problem: we can’t easily mix and match the
+monad-specific ones.</p>
+<p>For example, what if I want to read some user input with
+<code>getLine</code>, but then I want to <code>tell</code> the result to
+a monoid?</p>
+<hr />
+<h1 id="whats-missing">What’s missing?</h1>
+<p>Let’s try it. Suppose I want both <code>tell</code> and
+<code>getLine</code> together. We’ll define an instance of
+<code>IO</code> called <code>getNameAndLogIt</code>:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">System.IO</span> <span class="co">--for hFlush</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ot">getNameAndLogIt ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>getNameNadLogIt <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStr</span> <span class="st">&quot;Please enter your name: &quot;</span> </span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    hFlush stdout <span class="co">-- putStr doesn&#39;t flush automatically, unlike putStrLn</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> <span class="fu">getLine</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span></code></pre></div>
+<p>This is fine by itself, we can use this <code>IO</code> program like
+this:</p>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> getNameAndLogIt</span></code></pre></div>
+<p>But it’s not logging! How can we add logging functionality?</p>
+<hr />
+<h1 id="whats-missing-2">What’s missing? (2)</h1>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="dt">System.IO</span> <span class="co">--for hFlush</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="ot">getNameAndLogIt ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>getNameNadLogIt <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStr</span> <span class="st">&quot;Please enter your name: &quot;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    hFlush stdout <span class="co">-- putStr doesn&#39;t flush automatically, unlike putStrLn</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> <span class="fu">getLine</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    tell <span class="op">$</span> <span class="st">&quot;They entered: &quot;</span> <span class="op">++</span> name  <span class="co">-- soo... can we just log here?</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;&quot;</span></span></code></pre></div>
+<p>Seems fine…what’s wrong?</p>
+<p>Remember, <code>tell :: Monoid w =&gt; w -&gt; Writer w ()</code>
+Also remember, in <code>do</code> notation,
+<code>do { a &lt;- m ; f a }</code> means <code>m &gt;&gt;= f</code></p>
+<p>What is the type of <code>&gt;&gt;=</code>?</p>
+<hr />
+<h1 id="whats-missing-3">What’s missing? (3)</h1>
+<p><code>(&gt;&gt;=) :: Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b</code></p>
+<p>That is, for some monad <code>m</code>, <em>it gives the same monad
+out</em>.</p>
+<p><code>getLine</code> is an <code>IO</code>:
+<code>getLine :: IO String</code>. <code>tell</code> is a
+<code>Writer</code>:
+<code>tell :: Monoid w =&gt; w -&gt; Writer w ()</code></p>
+<p>So our <code>do</code> notation ends up trying to match this type:
+<code>IO String -&gt; (w -&gt; Writer w ()) -&gt; IO ()</code></p>
+<p><em>Which it can’t, because <code>IO</code>’s bind doesn’t know how
+to bind with a <code>Writer</code>!</em></p>
+<p>Put another way: the <code>do</code> block is being used to build an
+<code>IO</code>. We can’t just inject a <code>Writer</code> (with
+<code>tell</code>) inside it. <code>IO</code> doesn’t automatically know
+how to work with <code>Writer</code>.</p>
+<hr />
+<h1 id="more-fundamentally">More fundamentally</h1>
+<p>When we create a monad, we’re coming up with a little miniature
+language, with special statements. To do that, we need to decide what
+the “semicolons” mean (how to combine two statements into one
+statement).</p>
+<p>Monads also represent computational pipelines that return something.
+That’s why every monad we’ve seen has at least one type parameter
+(<code>IO Int</code>, <code>Maybe String</code>, <code>[Float]</code>)
+and sometimes more (<code>Writer String ()</code>,
+<code>Either Error Good</code>, <code>Reader Env Ret</code>)</p>
+<p>That last type is the “return” value of the monad. That’s why
+<code>return 7</code> works for any monad. It means “build this monad
+where there’s a 7 in its ‘return slot’”. Every monad has a “return
+slot”.</p>
+<hr />
+<h1 id="whats-missing-4">What’s missing? (4)</h1>
+<p>But <em>in between</em> the monad instances, some kind of magic
+happens: * In between two <code>Writers</code>, the monoids are
+<code>&lt;&gt;</code>d.  * In between two <code>IO</code>s, we combine
+them into one program. * In between two <code>State</code>s, we build a
+new state function that first executes the first <code>State</code>,
+then passes the result to the second <code>State</code> and executes
+that. * etc.</p>
+<p>But what about in between a <code>Writer</code> and a
+<code>State</code>? What should happen? <code>State</code> doesn’t have
+a monoid in it, and <code>Writer</code> doesn’t take a state as input,
+it only writes to it.</p>
+<p>The combination is not defined.</p>
+<hr />
+<h1 id="questions-3">Questions</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="monad-transformers">Monad Transformers</h1>
+<p>If we want to combine monads like that, we have to use a monad
+transformer.</p>
+<p>Monad transformers add functionality to other monads. For example, if
+you wanted to add early returns to a writer, you could use
+<code>MaybeT (Writer String) ()</code>, which is a <code>Maybe</code>
+monad that also supports <code>tell</code>.</p>
+<p>The <code>T</code> stands for <code>Transformer</code>.
+<code>MaybeT</code> is a type constructor that adds <code>Maybe</code>
+functionality to an existing <code>Monad</code>. In this case,
+<code>Writer</code>.</p>
+<p>This is a common pattern in Haskell. There’s also a
+<code>WriterT</code> to add logging to another monad. We can use
+transformers to layer on functionality. We’ll talk about how
+<code>WriterT String Maybe ()</code> is different from
+<code>MaybeT (Writer String) ()</code> in a bit.</p>
+<p>Almost every monad has a <code>T</code> variant to add its abilities
+to another monad. The only common one that doesn’t is <code>IO</code>.
+<code>IO</code> doesn’t have very interesting behavior.</p>
+<hr />
+<h1 id="monad-transformers-again">Monad Transformers again</h1>
+<p>Monad transformers are a complex topic, and a little too advanced for
+me to feel comfortable requiring them. However, they are important for
+practical Haskell programming.</p>
+<p>If you plan on actually building a real software system in Haskell,
+I’ve heard people say your first step is creating a monad transformer
+stack (I haven’t tried real Haskell software engineering, but it does
+sound fun.)</p>
+<p>This means using <code>type</code> or <code>newtype</code> to define
+a monad transformer that has all the features you need for the main
+logic of your app (the stuff directly called from
+<code>main</code>).</p>
+<p>A monad transformer is a data type that will take a monad and
+“inject” new behavior.</p>
+<p>Let’s take a look at how we can use them to combine features from
+different monads.</p>
+<hr />
+<h1 id="maybet"><code>MaybeT</code></h1>
+<p>One of the simplest monad transformers is one of the most useful:
+<code>MaybeT</code>.</p>
+<p><code>MaybeT</code> says “I want to add early returns to another
+monad.”</p>
+<p>For example, <code>MaybeT IO ()</code> is like an <code>IO ()</code>,
+but if any of the programs inside of it return a <code>Nothing</code>,
+the whole thing will quit.</p>
+<p><code>MaybeT</code> is a constructor. Its first argument is the monad
+type that we want to add the feature to. In this case <code>IO</code> is
+the monad type. The second argument is the return type of the new monad,
+which is going to be <code>()</code>.</p>
+<p>Note, <code>MaybeT (IO ())</code> is wrong, because
+<code>(IO ())</code> has the wrong kind. The value you pass needs to be
+a Type constructor <code>* -&gt; *</code>. <code>IO</code> is not a
+compete type, it’s a type function. The monad we give to a monad
+transformers must be a type function. The <code>()</code> is actually
+the return type of the <em>new</em> monad, not part of the
+<code>IO</code>.</p>
+<hr />
+<h1 id="maybet-example"><code>MaybeT</code> example</h1>
+<p>Let’s make a simple login routine to show this off. As always, let’s
+be mindful of the fact that actual authentication will involve more
+steps than this. We’re illustrating the value of early-returns, not
+expressing best practices for security (which this is <em>not</em>
+one).</p>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUser ::</span> <span class="dt">MaybeT</span> <span class="dt">IO</span> ()</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>ensureValidUser <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> hFlush stdout</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> lift <span class="fu">getLine</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        hoistMaybe <span class="dt">Nothing</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span></code></pre></div>
+<p>There are two things to cover first: <code>lift</code> and
+<code>hoistMaybe</code>. Let’s do that!</p>
+<hr />
+<h1 id="lift"><code>lift</code></h1>
+<p>A monad transformer is always built “on top of” another monad. It’s a
+new datatype.</p>
+<p>The <code>MaybeT</code> data definition looks like this:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">MaybeT</span> m a <span class="ot">=</span> <span class="dt">MaybeT</span> {<span class="ot"> runMaybeT ::</span> m (<span class="dt">Maybe</span> a) }</span></code></pre></div>
+<p><code>m</code> is the monad it takes. It stores a version of that
+monad which will return a <code>Maybe a</code> instead of an
+<code>a</code>.</p>
+<p>That is, previously, the monad had an <code>a</code> in its return
+slot. Now it has a <code>Maybe a</code>. So, based on its results, we
+can bind it to another <code>MaybeT</code> if the return value was
+<code>Just</code>. But if it returned <code>Nothing</code>, we will
+ignore any further <code>MaybeT</code> we have to bind to.</p>
+<hr />
+<h1 id="lift-2"><code>lift</code> (2)</h1>
+<p>The problem is that we want to use another monad, and add early
+returns to it.</p>
+<p>So suppose we want to use <code>IO</code>. That means we want to use
+functions like <code>putStrLn</code>.</p>
+<p>But <code>putStrLn :: String -&gt; IO ()</code>, it’s not a
+<code>String -&gt; MaybeT IO ()</code>. So we can’t bind an
+<code>IO ()</code> with a <code>MaybeT IO ()</code>. They are two
+different types!</p>
+<p><code>lift</code> takes an instance of the inner monad (the
+<code>IO a</code> in this case) and “wraps” it inside of the outer
+monad. So <code>lift</code> will convert an <code>IO a</code> into a
+<code>MaybeT IO a</code>.</p>
+<p>It will also convert a <code>Writer String a</code> into a
+<code>MaybeT (Writer String) a</code>. Or a <code>Maybe a</code> into a
+<code>WriterT Maybe a</code>.</p>
+<p><code>lift</code> is a function of the <code>MonadTrans</code>
+typeclass. All monad transformers can “lift” monads (or other
+transformer stacks) into them. This typeclass also implies
+<code>Monad</code>.</p>
+<hr />
+<h1 id="lift-for-maybet"><code>lift</code> for <code>MaybeT</code></h1>
+<p>But if <code>lift</code> is part of the <code>MonadTrans</code>
+typeclass, that means every <code>MonadTrans</code> (which includes
+<code>MaybeT</code>) can have its own definition for it. What does
+<code>lift</code> do for <code>MaybeT</code>?</p>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">MonadTrans</span> <span class="dt">MaybeT</span> <span class="kw">where</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    lift <span class="ot">=</span> <span class="dt">MaybeT</span> <span class="op">.</span> (<span class="fu">fmap</span> <span class="dt">Just</span>)</span></code></pre></div>
+<p>It just maps “Just” on it and puts the result inside a
+<code>MaybeT</code>.</p>
+<p>So if the original <code>IO</code> returned <code>7</code>, now it
+will return <code>Just 7</code>, and that value will be stored inside
+the MaybeT.</p>
+<hr />
+<h1 id="lift-for-maybet-2"><code>lift</code> for <code>MaybeT</code>
+(2)</h1>
+<p>This is what was meant by the type definition:</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">MaybeT</span> m a <span class="ot">=</span> <span class="dt">MaybeT</span> {<span class="ot"> runMaybeT ::</span> m (<span class="dt">Maybe</span> a) }</span></code></pre></div>
+<p>Take a monad, only now it returns a <code>Maybe a</code>. So by
+default, make it <code>Just</code>.</p>
+<p>Now let’s revisit the original code …</p>
+<hr />
+<h1 id="maybet-example-revisited"><code>MaybeT</code> example
+revisited</h1>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUser ::</span> <span class="dt">MaybeT</span> <span class="dt">IO</span> ()</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>ensureValidUser <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> hFlush stdout</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> lift <span class="fu">getLine</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>        lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        hoistMaybe <span class="dt">Nothing</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span></code></pre></div>
+<p>Every time we want to do IO, we <code>lift</code> it to make it
+return a <code>Just IO</code>, which won’t early return.</p>
+<p>Eww…do we really have to write <code>lift</code> for <em>every
+single</em> inner monad we use?</p>
+<hr />
+<h1 id="refactoring-the-lifts">Refactoring the lifts:</h1>
+<p>No, this is equivalent, and also more performant if this trivial
+optimization is turned off:</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUser&#39; ::</span> <span class="dt">MaybeT</span> <span class="dt">IO</span> ()</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>ensureValidUser&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> lift <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>        hFlush stdout</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">getLine</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>        hoistMaybe <span class="dt">Nothing</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span></code></pre></div>
+<p>Like most of Haskell’s features, <code>do</code> is an expression.
+Therefore, we can pass a <code>do</code> as the argument of
+<code>lift</code>. This <code>do</code> constructs an ordinary
+<code>IO</code>, which we then bind on the result of after converting it
+into an <code>IO (Maybe String)</code> using <code>lift</code>.</p>
+<hr />
+<h1 id="refactoring-the-lifts-1">Refactoring the lifts:</h1>
+<p>It’s actually a law of monad transformers that:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>lift a <span class="op">&gt;&gt;</span> lift b <span class="op">==</span> lift (a <span class="op">&gt;&gt;</span> b)</span></code></pre></div>
+<p>So it’s possible the optimizer can recognize these opportunities.</p>
+<p>“lifting” isn’t free: we’re slapping a “Just” on top of something.
+Not expensive, but not free, either. It’s nice to only do this
+occasionally.</p>
+<p>But there’s still one function we haven’t explained:
+<code>hoistMaybe</code>.</p>
+<p>To understand it, consider this: what is the type of
+<code>Nothing</code>, and what type does it need to be`?</p>
+<hr />
+<h1 id="hoistmaybe"><code>hoistMaybe</code></h1>
+<p><code>Nothing</code> has type <code>Maybe a</code>. But we don’t want
+it to be <code>Maybe</code>. We want it to be a <code>MaybeT m a</code>,
+where <code>m</code> is whatever monad we choose.</p>
+<p>That’s what <code>hoistMaybe</code> is. I can’t find its exact source
+code (the Hackage page has been down for some time), but it probably
+looks like this:</p>
+<div class="sourceCode" id="cb31"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ot">hoistMaybe ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> <span class="dt">MaybeT</span> m a</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>hoistMaybe <span class="dt">Nothing</span> <span class="ot">=</span> <span class="dt">MaybeT</span> (<span class="fu">return</span> <span class="dt">Nothing</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>hoistMaybe (<span class="dt">Just</span> x) <span class="ot">=</span> <span class="dt">MaybeT</span> (<span class="fu">return</span> (<span class="dt">Just</span> x)) </span></code></pre></div>
+<p>That last line could also be
+<code>hoistMaybe (Just x) = lift $ return x</code>. Same result.</p>
+<p>So now, we can convert a monad <code>m a</code> into a
+<code>MaybeT m a</code> with <code>lift</code>, and we can also convert
+a <code>Maybe a</code> into a <code>MaybeT m a</code> with
+<code>hoistMaybe</code>.</p>
+<hr />
+<h1 id="the-complete-program">The complete program</h1>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUser ::</span> <span class="dt">MaybeT</span> <span class="dt">IO</span> ()</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>ensureValidUser <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> lift <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>        hFlush stdout</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">getLine</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>        lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>        hoistMaybe&#39; <span class="dt">Nothing</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a><span class="ot">initializationRoutine ::</span> <span class="dt">MaybeT</span> <span class="dt">IO</span> ()</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>initializationRoutine <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    ensureValidUser</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;user is valid, proceeding with initialization...&quot;</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a><span class="co">-- vv we need to return () because runMaybeT returns a Maybe () instead of () </span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span> runMaybeT initializationRoutine ; <span class="fu">return</span> ()</span></code></pre></div>
+<hr />
+<h1 id="how-does-maybet-work">How does <code>MaybeT</code> work?</h1>
+<p>We’ve seen that <code>MaybeT</code> is a <code>MonadTrans</code>, and
+that <code>Monad m =&gt; MonadTrans m</code>.</p>
+<p>So that means <code>MaybeT</code> also has to be a
+<code>Monad</code>. It has to support <code>&gt;&gt;</code> and
+<code>&gt;&gt;=</code>.</p>
+<p>What does <code>&gt;&gt;=</code> look like for <code>MaybeT</code>?
+Something like this:</p>
+<div class="sourceCode" id="cb33"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">Monad</span> (<span class="dt">MaybeT</span> m) <span class="kw">where</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> x <span class="ot">=</span> <span class="dt">MaybeT</span> (<span class="fu">return</span> (just x)) </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">MaybeT</span> m) <span class="op">&gt;&gt;=</span> f <span class="ot">=</span> <span class="dt">MaybeT</span> <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>        result <span class="ot">&lt;-</span> m</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">case</span> result <span class="kw">of</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">return</span> <span class="dt">Nothing</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>            <span class="dt">Just</span> a <span class="ot">-&gt;</span> runMaybe <span class="op">$</span> f a </span></code></pre></div>
+<p>So <code>return</code> puts a monad that, given <code>x</code>,
+returns <code>Just x</code> inside the <code>MaybeT</code>. And bind
+will either create an <code>m</code> that either returns
+<code>Nothing</code> or runs depending on <code>m</code>.</p>
+<hr />
+<h1 id="questions-4">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="mixing-and-matching-transformers">Mixing and matching
+transformers</h1>
+<p>Okay, that’s an example of using <em>one</em> transformer. But when
+are we ever going to stop with just one?</p>
+<p>Let’s take a look at combining <code>WriterT</code> <em>and</em>
+<code>MaybeT</code> together. Now we can log <em>and</em> early
+return.</p>
+<hr />
+<h1 id="mixing-writert-and-maybet">Mixing <code>WriterT</code> and
+<code>MaybeT</code></h1>
+<div class="sourceCode" id="cb34"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUserLogging ::</span> <span class="dt">WriterT</span> <span class="dt">String</span> (<span class="dt">MaybeT</span> <span class="dt">IO</span>) ()</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>ensureValidUserLogging <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> lift <span class="op">$</span> lift <span class="op">$</span> <span class="kw">do</span> <span class="co">-- we&#39;ll clean up lift $ lift later </span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>        hFlush stdout</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">getLine</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    tell <span class="op">$</span> name <span class="op">++</span> <span class="st">&quot; attempted to log in...\n&quot;</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>        lift <span class="op">$</span> lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>        tell <span class="st">&quot;invalid user\n&quot;</span> <span class="co">-- we can &quot;tell&quot; without &quot;lift&quot;: Writer is top </span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>        lift <span class="op">$</span> hoistMaybe&#39; <span class="dt">Nothing</span> <span class="co">-- now we &quot;lift&quot; to early return</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>    tell <span class="st">&quot;valid user\n&quot;</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span></code></pre></div>
+<p>I know what you’re thinking: “EW I do NOT like writing
+<code>lift $ lift</code>”. Don’t worry, we’ll eliminate that later.</p>
+<hr />
+<h1 id="mixing-writert-and-maybet-2">Mixing <code>WriterT</code> and
+<code>MaybeT</code> (2)</h1>
+<p>Now, let’s see our new calling function and <code>main</code>:</p>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ot">initializationRoutineLogging ::</span> <span class="dt">WriterT</span> <span class="dt">String</span> (<span class="dt">MaybeT</span> <span class="dt">IO</span>) ()</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>initializationRoutineLogging <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    ensureValidUserLogging</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;user is valid, proceeding with initialization...&quot;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    tell <span class="st">&quot;initializing\n&quot;</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- result is a Maybe((), String)</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> runMaybeT <span class="op">$</span> runWriterT initializationRoutineLogging</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> result <span class="kw">of</span> </span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Just</span> (res, <span class="fu">log</span>) <span class="ot">-&gt;</span> <span class="fu">putStrLn</span> <span class="op">$</span> <span class="st">&quot;log is: &quot;</span> <span class="op">++</span> <span class="fu">log</span> </span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;we lost the log...&quot;</span></span></code></pre></div>
+<p>We run our <code>runSomethingT</code> functions in reverse order.
+<code>runWriterT</code> takes a <code>WriterT</code>, so it goes first.
+It will return a <code>MaybeT</code>, which is why we call
+<code>runMaybeT</code> next.</p>
+<hr />
+<h1 id="transformer-order-matters">Transformer order matters</h1>
+<p>Unfortunately, this result shows that something is wrong. We
+<em>want</em> the log!</p>
+<p>Monad transformers create new monads that first, run the original
+monad (call the <em>inner monad</em>), and then lift the result into a
+new monad.</p>
+<p>For example, <code>MaybeT</code> makes its inner monad return a
+<code>Maybe a</code> when it used to return an <code>a</code>. Its old
+result is lifted into a <code>Maybe</code>.</p>
+<p>And <code>WriterT</code> makes its inner monad return a
+<code>(a, w)</code>, where <code>w</code> is a monoid. That is,
+<code>newtype WriterT w m a = WriterT { runWriterT :: m (a, w) }</code></p>
+<p>The issue is, since <code>MaybeT</code> is the inner monad, when it
+is <code>Nothing</code>, it won’t return anything. It won’t keep the
+<code>w</code> log. It will lose it.</p>
+<p>So the <code>Just</code> case keeps the log, but we want the log no
+matter what!</p>
+<hr />
+<h1 id="fixing-it">Fixing it</h1>
+<p>We can fix this by flipping the order. This is the wrong order:</p>
+<div class="sourceCode" id="cb36"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUserLogging ::</span> <span class="dt">WriterT</span> <span class="dt">String</span> (<span class="dt">MaybeT</span> <span class="dt">IO</span>) ()</span></code></pre></div>
+<p>We really want this:</p>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUserLogging&#39; ::</span> <span class="dt">MaybeT</span> (<span class="dt">WriterT</span> <span class="dt">String</span> <span class="dt">IO</span>) ()</span></code></pre></div>
+<p>That is, instead of transforming a <code>Maybe</code> to return a
+<code>Writer</code>, we want to transform a <code>Writer</code> to
+return a <code>Maybe</code>. That way, we always have a monoid no matter
+what.</p>
+<p>Remember, a writer returns an <code>(a, w)</code> where
+<code>w</code> is a monoid. So now it returns <code>(Maybe a, w</code>).
+The <code>w</code> is always there.</p>
+<p>Knowledge check: Can you rewrite our functions before to use this new
+transformer?</p>
+<hr />
+<h1 id="knowledge-check-transformers-1">Knowledge check: transformers
+1</h1>
+<div class="sourceCode" id="cb38"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUserLogging&#39; ::</span> <span class="dt">MaybeT</span> (<span class="dt">WriterT</span> <span class="dt">String</span> <span class="dt">IO</span>) ()</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>ensureValidUserLogging&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> lift <span class="op">$</span> lift <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>        hFlush stdout </span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">getLine</span> </span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> tell <span class="op">$</span> name <span class="op">++</span> <span class="st">&quot; attempted to log in...\n&quot;</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>        lift <span class="op">$</span> lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>        tell <span class="st">&quot;invalid user\n&quot;</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>        hoistMaybe <span class="dt">Nothing</span> <span class="co">-- early return doesn&#39;t require a lift anymore</span></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> tell <span class="st">&quot;valid user\n&quot;</span></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a><span class="ot">initializationRoutineLogging&#39; ::</span> <span class="dt">MaybeT</span> (<span class="dt">WriterT</span> <span class="dt">String</span> <span class="dt">IO</span>) ()</span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>initializationRoutineLogging&#39; <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>    ensureValidUserLogging&#39;</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> lift <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;user is valid, proceeding with initialization...&quot;</span></span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>    tell <span class="st">&quot;initializing\n&quot;</span></span></code></pre></div>
+<hr />
+<h1 id="knowledge-check-transformers-1-main">Knowledge check:
+transformers 1, main</h1>
+<div class="sourceCode" id="cb39"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ot">main ::</span> <span class="dt">IO</span> ()</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- maybeResult is a WriterT String (IO (Maybe ()).</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- That is, it&#39;s a writer that always has its state available, </span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- but can optionally return another result. </span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> maybeResult <span class="ot">=</span> runMaybeT initializationRoutineLogging&#39;</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- writerResult is an IO (Maybe(), String).</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> writerResult <span class="ot">=</span> runWriterT maybeResult </span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- now we can bind, because we&#39;re binding an IO in an IO. </span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>    ioResult <span class="ot">&lt;-</span> writerResult <span class="co">-- we can actually bind this one</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (earlyReturnStatus, <span class="fu">log</span>) <span class="ot">=</span> ioResult</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- we could have done runWriterT $ runMaybeT $ ... similar to before</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> isNothing earlyReturnStatus</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="fu">putStrLn</span> <span class="st">&quot;initialization did not complete due to errors.&quot;</span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="fu">putStrLn</span> <span class="st">&quot;initialization was successfull...&quot;</span></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- we have the log no matter what now</span></span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;Authentication log:&quot;</span></span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="fu">log</span> </span></code></pre></div>
+<hr />
+<h1 id="questions-5">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="i-have-a-question">I have a question!</h1>
+<p>Previously we had a <code>MaybeT (WriterT String IO) ()</code>, which
+was basically a <code>IO (Maybe (), String)</code> (after going through
+all the substitutions)</p>
+<p>Why can’t I just use that!? Just define an
+<code>IO (Maybe (), String)</code>. The <code>String</code> stores the
+log. The <code>Maybe ()</code> stores the early return.</p>
+<p>Seems like we get everything we want! What’s missing?</p>
+<hr />
+<h1 id="the-binds-are-missing">The binds are missing</h1>
+<p>The issue is, binding <code>IO</code> doesn’t handle the log or early
+return.</p>
+<p>Suppose we have this:</p>
+<div class="sourceCode" id="cb40"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ot">someEarlyReturningThing ::</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> ())</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="ot">someLoggingThing ::</span> <span class="dt">IO</span> <span class="dt">String</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="ot">someOtherLoggingThing ::</span> <span class="dt">IO</span> <span class="dt">String</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="ot">someCombinedThing ::</span> <span class="dt">IO</span> (<span class="dt">Maybe</span> (), <span class="dt">String</span>)</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>someCombinedThing <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> doTheEarlyReturningThing</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    log1 <span class="ot">&lt;-</span> someLoggingThing</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    log2 <span class="ot">&lt;-</span> someOtherLoggingThing</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> (result, log1 <span class="op">&lt;&gt;</span> log2)</span></code></pre></div>
+<p>Notice: we didn’t actually early return if <code>result</code> was
+value. <code>IO</code> does not ever early return. We also had to
+manually combine the logs with <code>&lt;&gt;</code>, instead of using
+<code>Writer</code>!</p>
+<hr />
+<h1 id="the-real-point-of-monad-transformers">The real point of monad
+transformers</h1>
+<p>When we use monads, we don’t just want a computation. Those are easy
+to represent as ordinary functions.</p>
+<p>What we really want is some kind of “threaded effect”. Some kind of
+feature that is associated with every statement in the combined
+monad.</p>
+<p>We want these statements to automatically be combined together
+respecting the feature. Early returns short circuit the rest of the
+logic. Writers maintain a constant log. Readers maintain an environment.
+These features are “threaded in” between each statement.</p>
+<hr />
+<h1 id="why-monad-transformers-modify-the-inner-monad">Why monad
+transformers “modify” the inner monad</h1>
+<p>We transform monads by changing their return type. We don’t just
+“hoist” the monad into a new environment.</p>
+<p><code>MaybeT (WriterT String IO) ()</code> is an <code>IO</code>
+which will have a monoid injected into its return type, which will then
+be wrapped in a <code>Maybe</code>.</p>
+<p>Why not define the <code>T</code>’s backwards?
+<code>IOOf (WriterOf String Maybe) ()</code> If we did it this way, an
+<code>IOOf</code> would have to have some universal way to run its inner
+monads. There happens to be one for <code>Writer</code> and
+<code>Maybe</code>, but it would mean nothing could “contain” an
+<code>IOOf</code>, because we can’t safely run an <code>IO</code> and
+pull the result out.</p>
+<p>Basically, it would only work for some monads.</p>
+<hr />
+<h1 id="using-the-new-transformer">Using the new transformer</h1>
+<p>Now it’s time to address two things: 1. There is no way Haskell
+programmers, famously terse, actually write
+<code>lift $ lift $ lift $ ...</code> <em>ad infinitum</em> all the time
+2. Do we seriously have to change everything around every time we want
+to change the order? Sometimes it makes sense to have
+<code>MaybeT (Writer ...)</code> and sometimes it’s better to have a
+<code>WriterT ... Maybe</code> (when we want the early return to wipe
+out the log).</p>
+<p>We can solve both these issues at the same time, and have much nicer,
+more flexible, less “lifty” code.</p>
+<hr />
+<h1 id="the-monadic-typeclasses">The monadic typeclasses</h1>
+<p>If you’ve been looking through the documenation for different monads,
+you’ve probably noticed that it’s organized differently than in the
+slides.</p>
+<p>For example, if you go look at the <code>Writer</code> documentation
+<a
+href="https://hackage-content.haskell.org/package/mtl-2.3.2/docs/Control-Monad-Writer-Lazy.html">here</a>…</p>
+<p>You see that the top definition is not the <code>Writer</code> type.
+It’s a typeclass called <code>MonadWriter</code>.</p>
+<p>And if you keep scrolling down, you find it, but it’s defined in
+terms of <code>WriterT</code>!</p>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">Writer</span> w <span class="ot">=</span> <span class="dt">WriterT</span> w <span class="dt">Identity</span></span></code></pre></div>
+<p>What is <code>Identity</code>, and where did <code>Writer</code> go?
+It’s just the Haskell equivalent of a <code>typedef</code>.</p>
+<hr />
+<h1 id="the-monadic-typeclasses-2">The monadic typeclasses (2)</h1>
+<p>The logic here is that we want <code>Writer</code> and
+<code>WriterT</code> to support the same operations.</p>
+<p>We don’t want to have to copy all the functions they need. It would
+be annoying if we used <code>tell</code> for <code>Writer</code>, but
+<code>tellT</code> for <code>WriterT</code>.</p>
+<p>That would also make it so that if we refactored our code from a
+<code>MaybeT (Writer Log) ()</code> to a
+<code>WriterT Log Maybe ()</code>, we would have to change all the
+functions.</p>
+<p>So instead, we define a typeclass that has all the useful
+combinators. All the <code>Writer</code> functions, such as
+<code>tell</code> are in the typeclass.</p>
+<p>Then, we make both <code>Writer</code> and <code>WriterT</code> both
+be instances of this typeclass. This way, <code>tell</code> will work
+for both of them!</p>
+<hr />
+<h1 id="the-identity-monad">The Identity Monad</h1>
+<p>The identity monad is a monad that just represents a value
+<code>a</code>.</p>
+<p>It’s defined something like this:
+<code>data Identity a = Identity { runIdentity :: a }</code></p>
+<p>It doesn’t do anything useful. It only exists so that when a
+higher-kinded type, such as a monad transformer, <em>needs</em> a monad
+as one of their parameters, you can say “actually, I don’t want it to do
+anything”.</p>
+<p>This is why <code>Writer</code> is defined as
+<code>WriterT w Identity</code>. We’ve already gone through the trouble
+of defining <code>WriterT</code>, which has all the bind behavior in it
+and works on any inner monad.</p>
+<p>So now, we just say “a <code>Writer</code> is when that inner monad
+doesn’t do anything, it just returns the log”. Now there’s no special
+behavior. We end up with a plain <code>Writer</code>.</p>
+<hr />
+<h1 id="the-monadic-typeclasses-3">The monadic typeclasses (3)</h1>
+<p>This pattern repeats for almost every monad.</p>
+<p>There is a typeclass whose name starts with <code>Monad...</code>
+that defines all the useful combinators, then a transformer (except for
+<code>IO</code> which has no transformer) and then the actual monad
+itself. If the transformer exists, the monad is usually defined as just
+<code>WhateverT (...other params...) Identity</code>.</p>
+<p>And it turns out, we can use this pattern to dramatically simplify
+our code.</p>
+<hr />
+<h1 id="monadio">MonadIO</h1>
+<p>First, if you visit the <a
+href="https://hackage-content.haskell.org/package/base-4.22.0.0/docs/Control-Monad-IO-Class.html"><code>IO</code>
+monad documentation</a>, you’ll see that there’s a typeclass called
+<code>MonadIO</code>, which has a single combinator,
+<code>liftIO</code>.</p>
+<p>This function just pulls an <code>IO</code> into any monad that
+implements <code>MonadIO</code>.</p>
+<p>Why is that useful? Because pretty much every transformer implements
+<code>MonadIO</code>.</p>
+<p>For example, from <code>Control.Monad.Trans</code>:</p>
+<div class="sourceCode" id="cb42"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> <span class="dt">MonadIO</span> (<span class="dt">WriterT</span> w m) <span class="kw">where</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="ot">=</span> lift <span class="op">.</span> liftIO</span></code></pre></div>
+<p>So anytime the inner monad <code>m</code> supports
+<code>liftIO</code>, the outer monad also supports it.</p>
+<p>Therefore, we can do any number of <code>lift</code>s for
+<code>IO</code> all at once, with one <code>liftIO</code>.</p>
+<hr />
+<h1 id="example-of-nicer-code-with-liftio">Example of nicer code with
+<code>liftIO</code></h1>
+<div class="sourceCode" id="cb43"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUserLogging&#39; ::</span> <span class="dt">MaybeT</span> (<span class="dt">WriterT</span> <span class="dt">String</span> <span class="dt">IO</span>) ()</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>ensureValidUserLogging&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> liftIO <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>        hFlush stdout </span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">getLine</span> </span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> tell <span class="op">$</span> name <span class="op">++</span> <span class="st">&quot; attempted to log in...\n&quot;</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>        liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>        tell <span class="st">&quot;invalid user\n&quot;</span></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>        hoistMaybe <span class="dt">Nothing</span> <span class="co">-- early return doesn&#39;t require a lift anymore</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    lift <span class="op">$</span> tell <span class="st">&quot;valid user\n&quot;</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span></code></pre></div>
+<p>Notice, no more <code>lift $ lift $ ...</code>, and so on.
+<code>liftIO</code> handles that for us. Because
+<code>WriterT ... IO</code> is a <code>MonadIO</code>, and
+<code>MaybeT (some MonadIO)</code> is also one.</p>
+<hr />
+<h1 id="but-its-still-not-that-nice">But it’s still not <em>that</em>
+nice…</h1>
+<p>There are still a lot of <code>lifts</code> in that code…</p>
+<p>And it’s still very finicky. If we swap the order of the
+transformers, it wouldn’t work anymore because we’d have to remove a
+layer of lifts around some combinator calls, but add a new layer of
+lifts around others.</p>
+<p>Luckily, we can use those fancy <code>MonadX</code> typeclasses to
+write truly flexible and <em>effectful</em> code.</p>
+<p>Here’s an example of a proper version of the previous functions…</p>
+<hr />
+<h1 id="using-the-monadic-typeclasses">Using the monadic
+typeclasses</h1>
+<div class="sourceCode" id="cb44"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="ot">ensureValidUserLogging&#39;&#39; ::</span> (<span class="dt">MonadWriter</span> <span class="dt">String</span> m, <span class="dt">MonadIO</span> m, <span class="dt">Alternative</span> m) <span class="ot">=&gt;</span> m ()</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>ensureValidUserLogging&#39;&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    name <span class="ot">&lt;-</span> liftIO <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">putStr</span> <span class="st">&quot;enter your username: &quot;</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>        hFlush stdout </span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">getLine</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    tell <span class="op">$</span> name <span class="op">++</span> <span class="st">&quot; attempted to log in...\n&quot;</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    unless (name <span class="ot">`elem`</span> validUsers) <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>        liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;invalid user detected. exiting...&quot;</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>        tell <span class="st">&quot;invalid user\n&quot;</span></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>        empty </span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a>    tell <span class="st">&quot;valid user\n&quot;</span></span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">where</span> </span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a>        validUsers <span class="ot">=</span> [<span class="st">&quot;alice&quot;</span>, <span class="st">&quot;bob&quot;</span>, <span class="st">&quot;camille&quot;</span>]</span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a><span class="ot">initializationRoutineLogging&#39;&#39; ::</span> (<span class="dt">MonadWriter</span> <span class="dt">String</span> m, <span class="dt">MonadIO</span> m, <span class="dt">Alternative</span> m) <span class="ot">=&gt;</span> m ()</span>
+<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a>initializationRoutineLogging&#39;&#39; <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb44-18"><a href="#cb44-18" aria-hidden="true" tabindex="-1"></a>    ensureValidUserLogging&#39;&#39;</span>
+<span id="cb44-19"><a href="#cb44-19" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;user is valid, proceeding with initialization...&quot;</span></span>
+<span id="cb44-20"><a href="#cb44-20" aria-hidden="true" tabindex="-1"></a>    tell <span class="st">&quot;initializing\n&quot;</span></span></code></pre></div>
+<hr />
+<h1 id="some-notes-about-that-code">Some notes about that code</h1>
+<p>Notice that we’re no longer writing a particular monad.</p>
+<p>Instead, we’re saying, “these actions can be embedded in any monad,
+as long as it is a <code>MonadIO</code>, a <code>MonadWriter</code>, and
+an <code>Alternative</code>.</p>
+<p><code>Alternative</code> is the typeclass that can handle early
+returns. The name represents the idea of “we can have one or more
+results, or maybe nothing at all”. <code>MaybeT</code> and
+<code>Maybe</code> are both instances of <code>Alternative</code>.
+<code>empty</code> is the combinator that represents “early return” when
+we’re using <code>MaybeT</code>.</p>
+<p>(it’s not called <code>MonadMaybe</code> because it also works with
+parsers)</p>
+<p>So instead of creating a concrete monad stack. We’re saying “here is
+a program of any monad, as long as that monad supports these features:
+early return, logging, and IO.</p>
+<hr />
+<h1 id="what-about-main">What about main?</h1>
+<p>Believe it or not, <code>main</code> doesn’t need to change at
+all:</p>
+<div class="sourceCode" id="cb45"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>(earlyReturn, <span class="fu">log</span>) <span class="ot">&lt;-</span> runWriterT <span class="op">$</span> runMaybeT initializationRoutineLogging&#39;&#39;</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> isNothing earlyReturn</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">then</span> <span class="fu">putStrLn</span> <span class="st">&quot;initialization did not complete due to errors.&quot;</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">else</span> <span class="fu">putStrLn</span> <span class="st">&quot;initialization was successfull...&quot;</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;Authentication log:&quot;</span></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="fu">log</span> </span></code></pre></div>
+<p>Because we’re saying <code>runWriterT $ runMaybeT ...</code>,
+Haskell’s type inference knows that the return type of
+<code>initializationRoutineLogging''</code> needs to be
+<code>MaybeT (WriterT ... IO) ()</code>. It then further figures out the
+monoid is a <code>String</code>, because we’re using <code>log</code> as
+a <code>String</code>.</p>
+<hr />
+<h1 id="what-if-we-swapped-the-result">What if we swapped the
+result?</h1>
+<p>What if we did this?</p>
+<div class="sourceCode" id="cb46"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> runMaybeT <span class="op">$</span> runWriterT initializationRoutineLogging&#39;&#39;</span></code></pre></div>
+<p>Notice, now it’s <code>runMaybeT $ runWriterT ...</code> instead of
+<code>runWriterT $ runMaybeT ...</code></p>
+<p>Believe it or not, this works fine. Our function’s type just said “I
+can convert these operations into any monad, as long as it supports
+early returns, logging, and IO”.</p>
+<p><code>MaybeT (WriterT String IO) ()</code> and
+<code>WriterT String (MaybeT IO) ()</code> both work!</p>
+<p>However, we still have the constraint that we identified before:</p>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">putStrLn</span> <span class="op">$</span> <span class="kw">case</span> result <span class="kw">of</span> </span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="st">&quot;initialization failed, but there&#39;s no log now!&quot;</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">Just</span> (result, <span class="fu">log</span>) <span class="ot">-&gt;</span> <span class="st">&quot;Authentication log: &quot;</span> <span class="op">++</span> <span class="fu">log</span> </span></code></pre></div>
+<hr />
+<h1 id="we-let-the-user-decide">We let the user decide</h1>
+<p>We did something cool just now without meaning to: we made it up to
+the user whether or not the log survives a failed login attempt.</p>
+<p>Do we want the log? Probably. But the code will work either way, so
+the user can now decide what kind of return value they get. We have
+written a sub-routine in an <em>abstract programming language</em>, and
+let the user decide specifically how it gets executed!</p>
+<p>Oh, one more thing. Let’s alias all our constraints so we don’t have
+to type them:</p>
+<div class="sourceCode" id="cb48"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">AppMonad</span> m <span class="ot">=</span> (<span class="dt">MonadWriter</span> <span class="dt">String</span> m, <span class="dt">MonadIO</span> m, <span class="dt">Alternative</span> m)</span></code></pre></div>
+<p>Now our main app control functions can be declared like:</p>
+<div class="sourceCode" id="cb49"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="ot">initializationRoutine ::</span> <span class="dt">AppMonad</span> m <span class="ot">=&gt;</span> m ()</span></code></pre></div>
+<hr />
+<h1 id="questions-6">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="nice-exception-handling">Nice exception handling</h1>
+<p>Remember when we learned that <code>Either e</code> is a monad, and
+it supports early returns which don’t just return, but also carry an
+error?</p>
+<p>Its monad transformer isn’t called <code>EitherT</code> for some
+reason, but rather <code>ExceptT</code>. The new name makes sense: it
+adds exception handling support to a monad.</p>
+<p>The typeclass is called <code>MonadError</code> instead of
+<code>MonadExcept</code> like you would expect. I’m not sure why this
+particular monad is so irregular in its naming.</p>
+<hr />
+<h1 id="bad-exception-handling">Bad exception handling</h1>
+<p>Now, I’m not a fan of statement-based exception handling found in
+languages like C++ or Java. Getting a valid value out of a try block
+requires writing it to a variable scoped outside the block.</p>
+<div class="sourceCode" id="cb50"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>Something<span class="op">*</span> the_value <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span> <span class="op">{</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    the_value <span class="op">=</span> something_that_might_fail<span class="op">();</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">catch</span> <span class="op">(</span>Whatever <span class="at">const</span><span class="op">&amp;</span> exception<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    the_value <span class="op">=</span> DEFAULT_VALUE<span class="op">;</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Yuck. Wouldn’t it be nice if we could do this?</p>
+<div class="sourceCode" id="cb51"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>Something<span class="op">*</span> the_value <span class="op">=</span> <span class="cf">try</span> <span class="op">{</span> something_that_might_fail<span class="op">()</span> <span class="op">}</span> or_else <span class="op">{</span> DEFAULT <span class="op">};</span></span></code></pre></div>
+<p>Well, that’s exceptions as values, which is what we’re about to
+learn.</p>
+<hr />
+<h1 id="bad-exception-handling-2">Bad exception handling (2)</h1>
+<p>The old fashioned “exception statement” approach to errors is
+reminiscent of even older techniques of setting jump handlers to trigger
+on an error. (See <a
+href="https://en.wikipedia.org/wiki/Setjmp.h"><code>setjmp</code> and
+<code>longjmp</code> in C</a>).</p>
+<p>It forces you to reason about control flow. If I throw an exception
+here, who will catch it? It might be ten frames up in the stack.</p>
+<p>It also forces you to somehow know every error that could happen. In
+Java or C++, you can throw an exception at any time. If the caller does
+not catch it, control flow automatically jumps up to the next try block.
+That could be very far away.</p>
+<p>Any function you call in Java or C++ (unless marked
+<code>noexcept</code>) can throw. It can happen at any time, and it’s
+usually not part of the type. If it <em>is</em> part of the type, in
+Java, you <em>have</em> to wrap the function in a <code>try</code>.
+Yuck!</p>
+<hr />
+<h1 id="good-exception-handling">Good exception handling</h1>
+<p>So what do more modern languages do? They treat exceptions as “error”
+values. They don’t get to hijack the program’s control flow, they are
+just a normal value.</p>
+<p>In Rust, there is a type called <code>result&lt;T, E&gt;</code>,
+where <code>T</code> is the type of the “good” value, and <code>E</code>
+is the type of the error. (In Rust, angle brackets go around type
+params)</p>
+<p>Suppose you want to write a function that connects to a database, but
+returns an error string if it’s not able. In (simplified) Rust, that
+might look like:</p>
+<div class="sourceCode" id="cb52"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> connect(host<span class="op">:</span> Url) <span class="op">-&gt;</span> result<span class="op">&lt;</span>Connection<span class="op">,</span> <span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span></code></pre></div>
+<p>So it doesn’t return a <code>Connection</code>, it returns a result,
+which <em>could</em> be a valid connection, or it could be an error
+string.</p>
+<hr />
+<h1 id="good-exception-handling-2">Good exception handling (2)</h1>
+<p>But we <em>want</em> a <code>Connection</code>. We don’t want a
+<code>result&lt;Connection, String&gt;</code>. What can we do with a
+<code>result</code>?</p>
+<p>One thing we can do is “unwrap” it. This will pull the good value out
+if it exists, and panic (i.e, crash) otherwise:
+<code>let connection = connect(url).unwrap();</code></p>
+<p>If we want it to crash with a useful message, we can
+<code>expect</code> it instead:</p>
+<div class="sourceCode" id="cb53"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> connection <span class="op">=</span> connect(url)<span class="op">.</span>expect(<span class="st">&quot;couldn&#39;t connect&quot;</span>)</span></code></pre></div>
+<p>But what if we want to do one set of things if the value is good, and
+one if the value is bad?</p>
+<hr />
+<h1 id="good-exception-handling-3">Good exception handling (3)</h1>
+<p>We can use <code>and_then</code> and <code>or_else</code> to run code
+that only runs in the “good” and “error” case.</p>
+<div class="sourceCode" id="cb54"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> report_or_error<span class="op">:</span> <span class="dt">String</span> <span class="op">=</span> </span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>    connect(url)</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>and_then(<span class="op">|</span>db<span class="op">|</span> <span class="op">{</span> <span class="pp">log!</span>(<span class="st">&quot;connected to {}&quot;</span><span class="op">,</span> url)<span class="op">;</span> <span class="cn">Ok</span>(db) <span class="op">}</span> )</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>and_then(<span class="op">|</span>db<span class="op">|</span> generate_report(db))</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>unwrap_or_else(<span class="op">|</span>err<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> msg <span class="op">=</span> <span class="pp">format!</span>(<span class="st">&quot;failed to connect to {}. Error: {}.&quot;</span><span class="op">,</span> url<span class="op">,</span> err)<span class="op">;</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>        log(msg)<span class="op">;</span> msg</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)</span></code></pre></div>
+<p>(note: this is a sketch. In real Rust, you probably wouldn’t want a
+single type representing both a report and an error. I don’t want to
+introduce other Rust features right now, so we’re keeping it
+simple.)</p>
+<hr />
+<h1 id="good-exception-handling-4">Good exception handling (4)</h1>
+<p>[Does that remind you of anything?]</p>
+<p>And why is it good? It doesn’t jump anywhere, and you’re free to
+inspect error values without needing to create a whole try-catch
+block.</p>
+<p>You also know what type the errors could be. An enum, a string, etc.
+You don’t have to read the code to know what it’s going to throw: it’s
+included in the type.</p>
+<hr />
+<h1 id="good-exception-handling-rust-and-haskell">Good exception
+handling (Rust and Haskell)</h1>
+<p>In Rust, <code>result&lt;T, E&gt;</code> is just
+<code>Either E T</code>.</p>
+<p>It’s the same, and it’s a monad in both languages.</p>
+<p>The <code>&gt;&gt;=</code> operator in Haskell is named
+<code>and_then</code> in Rust. The <code>catchError</code> combinator
+(which we’re about to talk about) is named <code>or_else</code> in
+Rust.</p>
+<p>The only difference is that in <code>Haskell</code>, we don’t have to
+write “and_then” over and over, becuase it happens automatically between
+two statements in a <code>do</code> block.</p>
+<p>Monads are a common computational pattern. They show up in a lot of
+places. But in languages that recognize them with an explicit
+<code>Monad</code> typeclass or interface, there is the possibility for
+special syntax. This is why so many cool features are “monadic”.</p>
+<hr />
+<h1 id="lets-use-monaderror">Let’s use MonadError</h1>
+<p>For comparison, here’s a way we can copy the Rust approach in
+Haskell:</p>
+<div class="sourceCode" id="cb55"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">AppMonad&#39;</span> m <span class="ot">=</span> (<span class="dt">MonadWriter</span> <span class="dt">String</span> m, <span class="dt">MonadError</span> <span class="dt">String</span> m)</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="ot">reportOrError ::</span> <span class="dt">Url</span> <span class="ot">-&gt;</span> <span class="dt">AppMonad&#39;</span> m <span class="ot">=&gt;</span> m <span class="dt">String</span> </span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>reportOrError url <span class="ot">=</span> </span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">do</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>        db <span class="ot">&lt;-</span> liftEither <span class="op">$</span> connect url;</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>        tell <span class="op">$</span> <span class="st">&quot;connected to &quot;</span> <span class="op">++</span> url;</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> <span class="op">$</span> generateReport db </span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>    <span class="ot">`catchError`</span> \err <span class="ot">-&gt;</span> <span class="kw">do</span></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> msg <span class="ot">=</span> <span class="st">&quot;failed to connect to &quot;</span> <span class="op">++</span> url <span class="op">++</span> <span class="st">&quot;. Error: &quot;</span> <span class="op">++</span> err </span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>        tell msg ; <span class="fu">return</span> msg</span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- ^^^^ the part above is mostly equivalent to the Rust ^^^^</span></span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>    (output, <span class="fu">log</span>) <span class="ot">&lt;-</span> runWriterT <span class="op">$</span> runExceptT <span class="op">$</span> reportOrError <span class="st">&quot;db.somedomain.com&quot;</span></span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="op">$</span> <span class="st">&quot;output was: &quot;</span> <span class="op">++</span> <span class="fu">show</span> output <span class="co">-- small diff: result is an Either</span></span>
+<span id="cb55-15"><a href="#cb55-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="op">$</span> <span class="st">&quot;log was: &quot;</span> <span class="op">++</span> <span class="fu">log</span></span></code></pre></div>
+<hr />
+<h1 id="questions-7">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="a-custom-transformer">A custom transformer</h1>
+<p>We’ve been learning to use existing transformers: each one adds a new
+feature.</p>
+<p>But what if the feature we want doesn’t exist?</p>
+<p>I saw a cool feature appear in a bunch of more recent systems
+languages like <a href="https://ziglang.org/">Zig</a> and <a
+href="https://odin-lang.org/">Odin</a>. It’s called the “defer”
+statement.</p>
+<p>In languages with this feature, you can prefix a statement with
+“defer”, and that statement will be executed at the <em>end</em> of the
+current block instead of right away:</p>
+<div class="sourceCode" id="cb56"><pre
+class="sourceCode zig"><code class="sourceCode zig"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co">// from Zig homepage (modified slightly)</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="at">var</span> list<span class="op">:</span> std<span class="op">.</span>ArrayList(<span class="dt">u32</span>) <span class="op">=</span> <span class="op">.</span>empty; </span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="at">const</span> gpa <span class="op">=</span> std<span class="op">.</span>testing<span class="op">.</span>allocator;<span class="co">//a memory allocator. In Zig they&#39;re explicit. </span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Ensure the list is freed at scope exit.</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="cf">defer</span> list<span class="op">.</span>deinit(gpa);</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="op">...</span> <span class="co">// code comes after this, but list.deinit(gpa); runs at the very end!</span></span></code></pre></div>
+<hr />
+<h1 id="why-defer">Why defer?</h1>
+<p>This feature is useful because it’s very common to do
+“request/release” pairs. For example, requesting some memory with
+<code>malloc</code>, and then <code>free</code>ing it. Or requesting a
+file handle with <code>fopen</code>, and then <code>fclose</code>ing it.
+Normally, you’d have to put the free at the very end of the block:</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>SomeStruct<span class="op">*</span> s <span class="op">=</span> malloc<span class="op">(</span><span class="kw">sizeof</span><span class="op">(</span>SomeStruct<span class="op">));</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="co">// ... a bunch of code</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>free<span class="op">(</span>s<span class="op">);</span> <span class="cf">return</span> result<span class="op">;</span></span></code></pre></div>
+<p>But there are some issues: 1. If we early-return, we have to remember
+to free each time we do so. 2. The free is as far away as possible from
+the malloc, making it harder to verify 3. The frees are technically
+supposed to go in reverse order. Easy to mix up.</p>
+<hr />
+<h1 id="lets-make-a-monad-transformer">Let’s make a monad
+transformer!</h1>
+<p>First step, let’s imagine the interface:</p>
+<ul>
+<li><code>MonadIO</code> allows people to use <code>liftIO</code></li>
+<li><code>MonadWriter</code> allows people to use <code>tell</code> (and
+other combinators we won’t cover)</li>
+<li><code>MonadError</code> allows <code>throwError</code> and
+<code>catchError</code></li>
+</ul>
+<p>What would make sense to be in a <code>MonadDefer</code>?</p>
+<hr />
+<h1 id="theres-really-only-one-thing">There’s really only one thing</h1>
+<p>The only thing I can think of is <code>defer</code>:</p>
+<div class="sourceCode" id="cb58"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">MonadDefer</span> m <span class="kw">where</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    defer ::</span> m () <span class="ot">-&gt;</span> m ()</span></code></pre></div>
+<p>This combinator will take a monadic action that doesn’t return
+anything, and “save” it to be executed later.</p>
+<p>Ideally, if we call two defers in a row, we want them to execute in
+reverse order:</p>
+<div class="sourceCode" id="cb59"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>defer action1</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>defer action2</span></code></pre></div>
+<p>should be equivalent to <code>action2 &gt;&gt; action1</code>.</p>
+<hr />
+<h1 id="a-datatype-and-runner">A datatype and “runner”</h1>
+<p>We’re making a monad transformer. It doesn’t make sense to “defer” a
+statement unless there’s a monadic statement to defer…</p>
+<div class="sourceCode" id="cb60"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">DeferT</span> m a <span class="ot">=</span> <span class="dt">DeferT</span> (m (a, m ())) </span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">deriving</span> <span class="dt">Functor</span></span></code></pre></div>
+<p>The transformer will inject a dependent <code>m ()</code> to the
+return type of the original monad. This is the defer action. It doesn’t
+return anything. This is the goal:</p>
+<div class="sourceCode" id="cb61"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runDeferT ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">DeferT</span> m a <span class="ot">-&gt;</span> m a </span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>runDeferT (<span class="dt">DeferT</span> m) <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    (result, deferred) <span class="ot">&lt;-</span> m <span class="co">-- *save* the original return value</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    deferred <span class="co">-- now run the defferred action (can be many &gt;&gt;&#39;d together)</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> result <span class="co">-- new action that returns the original result</span></span></code></pre></div>
+<hr />
+<h1 id="the-applicative-instance">The applicative instance</h1>
+<div class="sourceCode" id="cb62"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">Applicative</span> (<span class="dt">DeferT</span> m) <span class="kw">where</span> </span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">DeferT</span> m_f) <span class="op">&lt;*&gt;</span> (<span class="dt">DeferT</span> m_x) <span class="ot">=</span> <span class="dt">DeferT</span> <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>        (f, d1) <span class="ot">&lt;-</span> m_f</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>        (x, d2) <span class="ot">&lt;-</span> m_x </span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> (f x, d2 <span class="op">&gt;&gt;</span> d1) <span class="co">-- sequence the deferrs in reverse order</span></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pure</span> x <span class="ot">=</span> <span class="dt">DeferT</span> (<span class="fu">pure</span> (x, <span class="fu">pure</span> ())) <span class="co">-- default is no deferrals: &quot;pure ()&quot;</span></span></code></pre></div>
+<p>First, we run the monad inside the first <code>DeferT</code>. We get
+its function <code>f</code> and defers. Then we run the second monad. We
+get its value <code>x</code> and its defers. The we produce a new
+<code>DeferT</code> that calls <code>f</code> on <code>x</code> but
+sequences the defers in opposite order.</p>
+<hr />
+<h1 id="the-monad-instance">The monad instance</h1>
+<div class="sourceCode" id="cb63"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">Monad</span> (<span class="dt">DeferT</span> m) <span class="kw">where</span> </span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="ot">=</span> <span class="fu">pure</span> </span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">DeferT</span> m_a) <span class="op">&gt;&gt;=</span> f <span class="ot">=</span> <span class="dt">DeferT</span> <span class="op">$</span> <span class="kw">do</span> </span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>        (a, d1) <span class="ot">&lt;-</span> m_a </span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (<span class="dt">DeferT</span> m_b) <span class="ot">=</span> f a </span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>        (b, d2) <span class="ot">&lt;-</span> m_b </span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span> (b, d2 <span class="op">&gt;&gt;</span> d1)</span></code></pre></div>
+<p>The monad instance is very similar to the <code>Applicative</code>
+instance, only we have to call <code>f</code> on the result of the monad
+inside first.</p>
+<p>Once we have the result of <code>f</code>, we sequence it with the
+left <code>DeferT</code> just like how we did in the applicative.</p>
+<hr />
+<h1 id="the-work-so-far">The work so far</h1>
+<p>We’ve now created a transformer that takes a monad and adds a “defer
+action” to it.</p>
+<p>When we sequence or bind two of these monads, we also create a new
+defer action by first running the second one’s action and then the
+first.</p>
+<p>But we still haven’t created a convenient way to actually defer
+something yet. We need to actually implement a “defer” keyword.</p>
+<p>Any ideas?</p>
+<hr />
+<h1 id="monaddefer"><code>MonadDefer</code></h1>
+<p>Remember, a <code>MonadDefer</code> is any monad that supports the
+“defer” keyword.</p>
+<div class="sourceCode" id="cb64"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">MonadDefer</span> m <span class="kw">where</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    defer ::</span> m () <span class="ot">-&gt;</span> m ()</span></code></pre></div>
+<p>Now let’s make an instance for it:</p>
+<div class="sourceCode" id="cb65"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">MonadDefer</span> (<span class="dt">DeferT</span> m) <span class="kw">where</span> </span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    defer (<span class="dt">DeferT</span> m) <span class="ot">=</span>      <span class="co">-- vv this expression took a lot of brain juice</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">DeferT</span> <span class="op">$</span> <span class="fu">return</span> ((), m <span class="op">&gt;&gt;=</span> <span class="fu">snd</span>) </span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- explanation: new defer is &quot;execute m, then execute m&#39;s defer slot&quot;.</span></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">-- equivalent to: DeferT $ return ((), runDeferT m )</span></span></code></pre></div>
+<p>To “defer” means to create a MonadDefer which returns the action as
+its “defer” action. Here, we use <code>&gt;&gt;=</code> to produce a new
+monad that does what <code>m</code> does and then executes its second
+result (which is the defer actions inside the defer statement).</p>
+<hr />
+<h1 id="what-about-the-other-typeclasses">What about the other
+typeclasses?</h1>
+<div class="sourceCode" id="cb66"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">MonadTrans</span> <span class="dt">DeferT</span> <span class="kw">where</span>  </span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    lift m_a <span class="ot">=</span> <span class="dt">DeferT</span> <span class="op">$</span> (, <span class="fu">return</span> ()) <span class="op">&lt;$&gt;</span> m_a</span></code></pre></div>
+<p>“Lifting” a monad into defer just means giving it an empty defer
+action. Here, we’re mapping the tuple constructor to whatever
+<code>m_a</code> returned, so now it’s additionally returning an empty
+action (one that returns <code>()</code>).</p>
+<div class="sourceCode" id="cb67"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">MonadIO</span> m <span class="ot">=&gt;</span> <span class="dt">MonadIO</span> (<span class="dt">DeferT</span> m) <span class="kw">where</span> </span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="ot">=</span> lift <span class="op">.</span> liftIO </span></code></pre></div>
+<p>If the inner monad is capable of <code>IO</code>, <code>DeferT</code>
+should also be capable of <code>IO</code>. This prevents needing to
+write <code>lift $ lift $ lift $ lift ... putStrLn</code>.</p>
+<p>The code means “first call <code>liftIO</code> on the inner monad,
+then lift the result into <code>DeferT</code>.</p>
+<hr />
+<h1 id="does-it-work">Does it work?</h1>
+<p>First, what do you expect this code to do?</p>
+<div class="sourceCode" id="cb68"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="ot">deferTest ::</span> (<span class="dt">MonadDefer</span> m, <span class="dt">MonadIO</span> m) <span class="ot">=&gt;</span> m ()</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>deferTest <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;pretend we&#39;re opening a config file with db info&quot;</span></span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>    defer <span class="op">$</span> liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;okay, close the file now.&quot;</span></span>
+<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;pretend we&#39;re opening a database connection&quot;</span></span>
+<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>    defer <span class="op">$</span> <span class="kw">do</span></span>
+<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>        defer <span class="op">$</span> liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;defer inside defer?&quot;</span> </span>
+<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>        liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;close the connection (*before* the file!)&quot;</span></span>
+<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;do some computation with the db...&quot;</span></span>
+<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> runDeferT deferTest </span></code></pre></div>
+<p>In your mind, try to guess what order the statements will actually
+get printed in.</p>
+<hr />
+<h1 id="the-answer">The answer</h1>
+<p>It does work!</p>
+<pre><code>pretend we&#39;re opening a config file with db info
+pretend we&#39;re opening a database connection
+do some computation with the db...
+close the connection (*before* the file!)
+defer inside defer?
+okay, close the file now.</code></pre>
+<p>Even the nested defer works. “defer inside defer?” is printed after
+we close the connection.</p>
+<p>With this monad transformer, we can easily do whatever cleanup we
+need right away.</p>
+<hr />
+<h1 id="how-does-it-interact-with-exceptt">How does it interact with
+ExceptT?</h1>
+<p>When making monad transformers, it’s important to consider how they
+interact with other monad transformers.</p>
+<p>In this case, we probably want
+<code>ExceptT Err (DeferT ...) a</code> rather than
+<code>DeferT (ExceptT Err ...) a</code></p>
+<p>Why? What’s the difference? [any thoughts?]</p>
+<hr />
+<h1 id="how-does-it-interact-with-exceptt-2">How does it interact with
+ExceptT? (2)</h1>
+<p><code>ExceptT Err m a</code> means “modify the monad <code>m</code>
+so that it returns an <code>Either Err a</code> instead of just an
+<code>a</code> like it normally would.</p>
+<p><code>DeferT m a</code> means “modify the monad <code>m</code> so
+that it returns a <code>m (a, m ())</code> instead of just an
+<code>a</code>. The second of the pair (the <code>m ()</code> is
+interpreted as the action to run after.</p>
+<p><code>DeferT (ExceptT Err ...) a</code> then means add a deferral
+mechanism to to the underlying <code>ExceptT</code> monad.</p>
+<p>What’s wrong with that? Because the defer result would only apply
+when the <code>Either</code> is <code>Right</code>. In the “error” case,
+the defer actions wouldn’t apply. “Inner” monads are more fundamental,
+so we’re saying “the deferall function is dependent on the error
+funciton”</p>
+<p>That’s probably not what we want: we typically want defer actions to
+<em>especially</em> apply in error cases. But maybe there are times when
+you don’t. You have the option.</p>
+<hr />
+<h1 id="but-does-that-even-work">But does that even work?</h1>
+<div class="sourceCode" id="cb70"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="ot">deferTest2 ::</span> (<span class="dt">MonadDefer</span> m, <span class="dt">MonadIO</span> m, <span class="dt">MonadError</span> <span class="dt">String</span> m) <span class="ot">=&gt;</span> m ()</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>deferTest2 <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;pretend we&#39;re opening a file&quot;</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>    defer <span class="op">$</span> liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;okay, close the file&quot;</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>    throwError <span class="st">&quot;throw an error though&quot;</span></span>
+<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb70-7"><a href="#cb70-7" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span></span>
+<span id="cb70-8"><a href="#cb70-8" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> runDeferT <span class="op">$</span> runExceptT deferTest2</span>
+<span id="cb70-9"><a href="#cb70-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">...</span></span></code></pre></div>
+<p>Why won’t this code run?</p>
+<hr />
+<h1 id="something-is-still-missing">Something is still missing</h1>
+<p>In order for that code to work, this must be the type of the
+transformer stack:</p>
+<div class="sourceCode" id="cb71"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ExceptT</span> <span class="dt">String</span> (<span class="dt">DeferT</span> <span class="dt">IO</span>) ()</span></code></pre></div>
+<p>The problem is, <code>defer</code> only exists in the
+<code>MonadDefer</code> typeclass:</p>
+<div class="sourceCode" id="cb72"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> <span class="dt">MonadDefer</span> m <span class="kw">where</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    defer ::</span> m () <span class="ot">-&gt;</span> m ()</span></code></pre></div>
+<p>So that means, <code>Except</code> does not support
+<code>defer</code>!</p>
+<p>Are we doomed?</p>
+<hr />
+<h1 id="were-not-doomed">We’re not doomed</h1>
+<p>We can just say “hey, if we wrap except around something that
+supports <code>defer</code>, then the except also supports
+<code>defer</code>.</p>
+<div class="sourceCode" id="cb73"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">MonadDefer</span> m <span class="ot">=&gt;</span> <span class="dt">MonadDefer</span> (<span class="dt">ExceptT</span> s m) <span class="kw">where</span> </span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="ot">    defer ::</span> <span class="dt">MonadDefer</span> m <span class="ot">=&gt;</span> <span class="dt">ExceptT</span> s m () <span class="ot">-&gt;</span> <span class="dt">ExceptT</span> s m ()</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>    defer (<span class="dt">ExceptT</span> m)  <span class="ot">=</span> lift <span class="op">$</span> defer <span class="op">$</span> void m </span></code></pre></div>
+<p>The logic is that if the monad inside the <code>ExceptT</code>
+supports defer, then run the action ignoring the result (what void m
+does) and lift that deferred action into an <code>ExceptT</code>.</p>
+<p>This raises questions about what happens if an error happens inside
+some deferred code. This code here will throw away those
+<code>Left</code> values.</p>
+<p>Could we fix this? Sure, but it would require changing the semantics
+of <code>defer</code>.</p>
+<hr />
+<h1 id="working">Working</h1>
+<div class="sourceCode" id="cb74"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="ot">deferTest2 ::</span> (<span class="dt">MonadDefer</span> m, <span class="dt">MonadIO</span> m, <span class="dt">MonadError</span> <span class="dt">String</span> m) <span class="ot">=&gt;</span> m ()</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>deferTest2 <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;pretend we&#39;re opening a file&quot;</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    defer <span class="op">$</span> liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;okay, close the file&quot;</span></span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;now operate on the file&quot;</span></span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>    throwError <span class="st">&quot;throw an error though&quot;</span></span>
+<span id="cb74-7"><a href="#cb74-7" aria-hidden="true" tabindex="-1"></a>    defer <span class="op">$</span> liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;this won&#39;t happen because we threw.&quot;</span></span>
+<span id="cb74-8"><a href="#cb74-8" aria-hidden="true" tabindex="-1"></a>    liftIO <span class="op">$</span> <span class="fu">putStrLn</span> <span class="st">&quot;more operations that won&#39;t run, but we still want to clean up!&quot;</span></span>
+<span id="cb74-9"><a href="#cb74-9" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> <span class="kw">do</span> </span>
+<span id="cb74-10"><a href="#cb74-10" aria-hidden="true" tabindex="-1"></a>    result <span class="ot">&lt;-</span> runDeferT <span class="op">$</span> runExceptT deferTest2</span>
+<span id="cb74-11"><a href="#cb74-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span> result </span></code></pre></div>
+<pre><code>pretend we&#39;re opening a file
+now operate on the file
+okay, close the file
+Left &quot;throw an error though&quot;</code></pre>
+<p>We threw an error but the file still got closed!</p>
+<hr />
+<h1 id="i-still-hate-writing-liftio">I still hate writing
+<code>liftIO</code>!</h1>
+<p>Understandable. This is a weakness in the prelude IO functions.</p>
+<p>The prelude is just the set of modules and functions that are
+imported by default.</p>
+<p>There are other preludes, and the langauge is customizable enough to
+use them.</p>
+<p><a href="https://hackage.haskell.org/package/protolude">This one</a>
+replaces <code>putStrLn :: String -&gt; IO ()</code> with <a
+href="https://hackage-content.haskell.org/package/protolude-0.3.5/docs/Protolude.html#v:putStrLn"><code>MonadIO m =&gt; putStrLn :: String -&gt; m ()</code></a>.</p>
+<p>So if you use protolude, you don’t have to <code>liftIO</code>, as
+long as your transformer stack has a <code>MonadIO</code> in it.</p>
+<p>But there is a deeper problem with the code we’ve seen…</p>
+<hr />
+<h1 id="the-n-squared-problem">The n-squared problem</h1>
+<p>We had to make a special instance of <code>MonadDefer</code> for
+<code>MonadErrors</code> whose inner monads supported
+<code>MonadDefer</code>.</p>
+<p>If we want a transformer stack to be <code>MonadDefer</code> when the
+top transformer is not <code>DeferT</code>, then we have to have every
+transformer above <code>DeferT</code> be <code>MonadDefer</code>.</p>
+<p>Likewise, if we want a transformer stack to be <code>MonadIO</code>,
+we need every transformer above <code>IO</code> to also be
+<code>MonadIO</code>. Frequently this is all of them.</p>
+<p>In fact, every time we add a new transformer, we often need to then
+implement <code>MonadWhatever</code> on every <em>other</em>
+trnasformer.</p>
+<p>This means that if we have <code>n</code> transformers, we actually
+need up to <code>n^2</code> instances to be defined. I’ve seen this
+called the “n-squared instances problem” for this reason. There is a
+solution…</p>
+<hr />
+<h1 id="questions-8">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="algebraic-effects">Algebraic effects</h1>
+<p>Okay, for real this time, you are not required to learn this and I
+haven’t gone and implemented a language feature in it.</p>
+<p>But there is a strategy to fixing the n-squared instances problem
+that is exciting and has been catching on in many other functional
+programming languages (<a href="https://ocaml.org/">OCaml</a> and <a
+href="https://fsharp.org/">FSharp</a> in particular)</p>
+<p>It’s called <em>Algebraic Effects</em>. <a
+href="https://hackage.haskell.org/package/fused-effects">Haskell
+supports it too</a>.</p>
+<hr />
+<h1 id="algebraic-effects-2">Algebraic effects (2)</h1>
+<p>The basic idea is that instead of creating a monad transformer, you
+create a data type that encodes the operations you are interested in.
+For a basic IO effect, we could create a type like <a
+href="https://github.com/fused-effects/fused-effects/blob/main/docs/defining_effects.md">this</a>:</p>
+<div class="sourceCode" id="cb76"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Teletype</span> (<span class="ot">m ::</span> <span class="dt">Type</span> <span class="ot">-&gt;</span> <span class="dt">Type</span>) k <span class="kw">where</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Read</span><span class="ot">  ::</span>           <span class="dt">Teletype</span> m <span class="dt">String</span></span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">Write</span><span class="ot"> ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Teletype</span> m ()</span></code></pre></div>
+<p>Those are special commands that will become available to use inside
+of any monad <code>m</code> that has the <code>Teletype</code> effect in
+its signature <code>sig</code>.</p>
+<p>(note, <code>data ... where</code> is using an advanced feature
+called <a
+href="https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/gadt.html">Generalized
+Algebraic Data Types</a> (GADTs)–it lets us give constructors more
+precise types so we don’t have to pattern match everywhere)</p>
+<hr />
+<h1 id="algebraic-effects-3">Algebraic effects (3)</h1>
+<p>Somewhere else, you define an <code>Algebra</code> that is basically
+an interpreter for these custom messages.</p>
+<div class="sourceCode" id="cb77"><pre
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="kw">newtype</span> <span class="dt">TeletypeIOC</span> m a <span class="ot">=</span> <span class="dt">TeletypeIOC</span> {<span class="ot"> runTeletypeIO ::</span> m a }</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">deriving</span> (<span class="dt">Applicative</span>, <span class="dt">Functor</span>, <span class="dt">Monad</span>, <span class="dt">MonadIO</span>)</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> (<span class="dt">MonadIO</span> m, <span class="dt">Algebra</span> sig m) <span class="ot">=&gt;</span> <span class="dt">Algebra</span> (<span class="dt">Teletype</span> <span class="op">:+:</span> sig) (<span class="dt">TeletypeIOC</span> m) <span class="kw">where</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>  alg hdl sig ctx <span class="ot">=</span> <span class="kw">case</span> sig <span class="kw">of</span></span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">L</span> <span class="dt">Read</span>      <span class="ot">-&gt;</span> (<span class="op">&lt;$</span> ctx) <span class="op">&lt;$&gt;</span> liftIO <span class="fu">getLine</span></span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">L</span> (<span class="dt">Write</span> s) <span class="ot">-&gt;</span> ctx      <span class="op">&lt;$</span>  liftIO (<span class="fu">putStrLn</span> s)</span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">R</span> other     <span class="ot">-&gt;</span> <span class="dt">TeletypeIOC</span> (alg (runTeletypeIO <span class="op">.</span> hdl) other ctx)</span></code></pre></div>
+<p>Don’t worry too much about understanding this. Focus on the fact that
+this algebra can be “injected” into a set of types (the <code>:+:</code>
+is a type constructor for these) and it does the operations it
+recognizes. It then leaves other operations to other algebras (the
+<code>R other</code> part).</p>
+<hr />
+<h1 id="algebraic-effects-4">Algebraic effects (4)</h1>
+<p>The “algebraic” part is that we can compose effects. We can use them
+like the constraints on our monads before.</p>
+<p>What’s cool though is that we only require one of those algebras per
+effect. We don’t need n^2.</p>
+<hr />
+<h1 id="why">Why?</h1>
+<p>Writing with algebraic effects is like defining a custom language
+that exactly matches your problem space. I’ve heard it called a “custom
+alphabet” (using a state machine metaphor).</p>
+<p>Think of it as like a type-safe, debuggable, custom scripting
+language.</p>
+<p>A domain-specific language.</p>
+<p>This seems like a powerful ability and it is. What is its
+cmpetitor?</p>
+<hr />
+<h1 id="comparison-with-macros">Comparison with Macros</h1>
+<p>One powerful way to add features to a language is “macros”.</p>
+<p>We talked about them briefly when learning Lisp. A macro is a
+function that takes an abstract syntax tree and returns one.</p>
+<p>You can also use them to add new features to a language. Like this
+macro I use in the Fennel programming language to add “incrementing” to
+the language:</p>
+<pre class="fennel"><code>(macro inc! [x] `(set ,x (+ 1 ,x)))</code></pre>
+<p>It makes it so that whenever you write <code>inc!</code>, the token
+to its right is interpreted as a variable. We end up generating the code
+<code>(set varName (+ 1 varName))</code>, which is incrementing.</p>
+<hr />
+<h1 id="comparison-with-macros-2">Comparison with Macros (2)</h1>
+<p>Macros are actually a bit more powerful individually than monads or
+effects. They let you write code that tells the compiler how to generate
+code. (The fused effects library uses macros in Haskell)</p>
+<p>In some ways, this is more powerful. We can actually customize raw
+syntactic rules to inject a completely custom programming language into
+our language.</p>
+<p>However, it’s less composable. I couldn’t necessarily combine the
+features of two such custom languages.</p>
+<p>Monads, through the transformers or effects, are highly composable.
+We can add new features to our stack by inserting another transformer
+layer or adding another type constraint.</p>
+<hr />
+<h1 id="questions-9">Questions?</h1>
+<!-- _class: invert questions -->
+<hr />
+<h1 id="finishing-up">Finishing up</h1>
+<p>We’ve covered a truly enormous amount of material this semester.</p>
+<p>Haskell has likely made you aware of just how real brain-fatigue is.
+It certainly did me!</p>
+<p>But there are a few takeaways I want you to have that I hope have
+come through…</p>
+<hr />
+<h1 id="some-takeaways">Some takeaways</h1>
+<p>Programming languages can start with what is easy to compute. “We
+know we have to generate assembly or intermediate code. What are the
+most advanced features we can handle?”</p>
+<p>But they can also start from the other end. “We know what is possible
+to express mathematically. How much of that can be turned into a
+runnable comptuation?”</p>
+<p>Haskell is likely the first language you learned of the second
+type.</p>
+<p>By starting with math, we unlock a kind of “idea purity” that is very
+interesting. We abstract things so much that everything we’re left with
+is essential.</p>
+<p>A monad is kind of the “essential” idea of a dynamic computational
+structure. A primitive kind of program which can be executed. And an
+effect is something that the abstract computer can do.</p>
+<hr />
+<h1 id="some-takeaways-2">Some takeaways (2)</h1>
+<p>Since a monad is the “essence” of data-dependent sequential
+computation, any time you need that, you’re going to use/make a monad
+(or effect), intentionally or not: * Your event scripting system in your
+video game is probably monadic * The logic driving your dynamic music
+visualizer is probably monadic * Your async logic that allows you to
+encode threads of computation in a promise in Javascript is monadic (and
+sometimes is literally a monad: it’s just <code>IO</code> in Haskell). *
+Your custom logging system is probably monadic. Or at least, it
+<em>could</em> be one. * Your configuration system that makes the global
+configuration available as a singleton is monadic (reader) * Your
+exception system is probably monadic.</p>
+<p>If you know the theory, you can use it deliberately instead of
+haphazardly.</p>
+<hr />
+<h1 id="some-takeaways-3">Some takeaways (3)</h1>
+<p>Because of the fact that so many things are monads, you can either
+understand what a monad is conceptually and write your system to benefit
+from the theory behind them…</p>
+<p>…or you don’t. And you end up with Java’s exception system. Or Java’s
+singleton classes. Or Java’s initial threading system in which every
+object was implicitly a monitor.</p>
+<p>What’s wrong with Java? Bad theory meant that you have to interact
+with a bunch of random details to use its features, because the
+“essence” of ideas was not discovered. For example: there’s no generic
+syntax to sequence Streams, Optionals, and Futures, because they didn’t
+know about monads (i.e., there’s no <code>do</code> notation or
+HKTs).</p>
+<p>Basically, with incomplete theory, you end up with Java v. 1.0! And
+nobody wants that.</p>
+<p>(they’ve honestly fixed a lot of Java by incorporating these
+higher-math ideas, so another valuable lesson is that no system is
+impossible to clean up!)</p>
+<hr />
+<h1 id="conclusion">Conclusion</h1>
+<p>There will be more math developed and more advanced programming
+language features.</p>
+<p>Remember the blub paradox. We are always blub programmers. Haskell is
+blub!</p>
+<p>Never stop learning!</p>
+</body>
+</html>
