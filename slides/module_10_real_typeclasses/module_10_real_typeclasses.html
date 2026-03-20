@@ -878,7 +878,8 @@ takes a type, like <code>Int</code>, and constructs a new type:
 <p>And that’s why it’s called a type constructor.</p>
 <hr />
 <h1 id="higher-kinded-types-2">Higher kinded types (2)</h1>
-<p>Is a type constructor a higher kinded type? Yes.</p>
+<p>Is a type constructor a higher kinded type? Well, the type which
+<em>has</em> one is.</p>
 <p>But not every type constructor is the same.</p>
 <p>Consider a simple datatype, like <code>Int</code>. It’s <em>kind</em>
 is <code>*</code> (pronounced “splat”)</p>
@@ -919,8 +920,9 @@ list of something.</p>
 <p>Haskell is one of the rare programming languages that has a higher
 kinded type system. Many languages have parameterized types (like
 <code>ArrayList&lt;T&gt;</code> in Java), but you can’t really say “this
-is an interface that potentially can be implemented by any type with two
-type parameters”.</p>
+is an interface that takes a collection with type <code>a</code> in it
+and returns the same type of collection with type <code>b</code> in
+it”.</p>
 <hr />
 <h1 id="questions-4">Questions?</h1>
 <!-- _class: invert questions -->
@@ -1086,11 +1088,11 @@ the user?</p>
 That is, mapping the identity function inside the functor won’t change
 anything. This law forces <code>fmap</code> to <em>only</em> apply the
 function <code>f</code>, and not to modify the functor in any other way.
-2. `fmap (f . g) = fmap f . fmap g. This law is how functors are thought
-of in category theory. It basically says you can’t take a compound
-function and do something wacky based on the specific identity of that
-function. Like “if it happens to be (+1) . (*2) just output 42 instead
-of computing the value”. Instead, the functor must respect
+2. <code>fmap (f . g) = fmap f . fmap g</code>. This law is how functors
+are thought of in category theory. It basically says you can’t take a
+compound function and do something wacky based on the specific identity
+of that function. Like “if it happens to be (+1) . (*2) just output 42
+instead of computing the value”. Instead, the functor must respect
 composition.</p>
 <hr />
 <h1 id="warning-about-functors">Warning about functors</h1>
@@ -1120,7 +1122,8 @@ math. Don’t get confused when you look it up! <em>Our</em> functors are
 things that support <em>map</em>, they don’t have to be functions!</p>
 <p>But…is a function a functor?</p>
 <hr />
-<h1 id="actually-yes">Actually yes</h1>
+<h1 id="is-not-one-but-a---...-is-one"><code>-&gt;</code> is not one,
+but <code>a -&gt; ...</code> <em>is</em> one</h1>
 <p>Specifically, ((-&gt;) a) is a functor. That is, a function from
 <code>a</code> to…something.</p>
 <p>It has this instance definition:</p>

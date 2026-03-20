@@ -659,7 +659,7 @@ And that's why it's called a type constructor.
 
 # Higher kinded types (2)
 
-Is a type constructor a higher kinded type? Yes.
+Is a type constructor a higher kinded type? Well, the type which *has* one is.
 
 But not every type constructor is the same.
 
@@ -697,7 +697,7 @@ This means a functor *must* be a higher kinded type. It's always a functor *of* 
 
 List is a functor, and list meets this constraint. We always have a list of something.
 
-Haskell is one of the rare programming languages that has a higher kinded type system. Many languages have parameterized types (like `ArrayList<T>` in Java), but you can't really say "this is an interface that potentially can be implemented by any type with two type parameters". 
+Haskell is one of the rare programming languages that has a higher kinded type system. Many languages have parameterized types (like `ArrayList<T>` in Java), but you can't really say "this is an interface that takes a collection with type `a` in it and returns the same type of collection with type `b` in it". 
 
 ---
 
@@ -718,7 +718,7 @@ ghci> 20 <$ [10, 20, 30]
 [20, 20, 20] 
 ```
 
-It's an operator that is useful to "project" a value into many places, but I don't find myself using it often. [Can you write a default implementation of `<$` in terms of `fmap`?]
+It's an operator that is useful to "project" a value into many places, but I don't find myself using it often. [Can you write a default implementation of `<$` in terms of `fmap`?] 
 
 ---
 
@@ -874,7 +874,7 @@ Remember how `Semigroup`s and `Monoid`s had laws they had to follow to make sure
 
 Functors have laws too. Two of them:
 1. `fmap id = id`. That is, mapping the identity function inside the functor won't change anything. This law forces `fmap` to *only* apply the function `f`, and not to modify the functor in any other way.
-2. `fmap (f . g) = fmap f . fmap g. This law is how functors are thought of in category theory. It basically says you can't take a compound function and do something wacky based on the specific identity of that function. Like "if it happens to be (+1) . (*2) just output 42 instead of computing the value". Instead, the functor must respect composition. 
+2. `fmap (f . g) = fmap f . fmap g`. This law is how functors are thought of in category theory. It basically says you can't take a compound function and do something wacky based on the specific identity of that function. Like "if it happens to be (+1) . (*2) just output 42 instead of computing the value". Instead, the functor must respect composition. 
 
 ---
 
@@ -904,7 +904,7 @@ But...is a function a functor?
 
 ---
 
-# Actually yes
+# `->` is not one, but `a -> ...` *is* one
 
 Specifically, ((->) a) is a functor. That is, a function from `a` to...something.
 
