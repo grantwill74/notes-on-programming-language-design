@@ -1239,21 +1239,575 @@ Its monad transformer isn't called `EitherT` for some reason, but rather `Except
 
 The typeclass is called `MonadError` instead of `MonadExcept` like you would expect. I'm not sure why this particular monad is so irregular in its naming.
 
+---
+
+# Bad exception handling
+
+Now, I'm not a fan of statement-based exception handling found in languages like C++ or Java. Getting a valid value out of a try block requires writing it to a variable scoped outside the block. 
+
+```c++
+Something* the_value = nullptr;
+try {
+    the_value = something_that_might_fail();
+} catch (Whatever const& exception) {
+    the_value = DEFAULT_VALUE;
+}
+```
+
+Yuck. Wouldn't it be nice if we could do this?
+
+```c++
+Something* the_value = try { something_that_might_fail() } or_else { DEFAULT };
+```
+
+Well, that's exceptions as values, which is what we're about to learn.
+
+---
+
+# Bad exception handling (2)
+
+The old fashioned "exception statement" approach to errors is reminiscent of even older techniques of setting jump handlers to trigger on an error. (See [`setjmp` and `longjmp` in C](https://en.wikipedia.org/wiki/Setjmp.h)).
+
+It forces you to reason about control flow. If I throw an exception here, who will catch it? It might be ten frames up in the stack. 
+
+It also forces you to somehow know every error that could happen. In Java or C++, you can throw an exception at any time. If the caller does not catch it, control flow automatically jumps up to the next try block. That could be very far away.
+
+Any function you call in Java or C++ (unless marked `noexcept`) can throw. It can happen at any time, and it's usually not part of the type. If it *is* part of the type, in Java, you *have* to wrap the function in a `try`. Yuck!
+
+---
+
+# Good exception handling
+
+So what do more modern languages do? They treat exceptions as "error" values. They don't get to hijack the program's control flow, they are just a normal value. 
+
+In Rust, there is a type called `result<T, E>`, where `T` is the type of the "good" value, and `E` is the type of the error. (In Rust, angle brackets go around type params)
+
+Suppose you want to write a function that connects to a database, but returns an error string if it's not able. In (simplified) Rust, that might look like:
+
+```rust
+fn connect(host: Url) -> result<Connection, String> { ... }
+```
+
+So it doesn't return a `Connection`, it returns a result, which *could* be a valid connection, or it could be an error string.
+
+---
+
+# Good exception handling (2)
+
+But we *want* a `Connection`. We don't want a `result<Connection, String>`. What can we do with a `result`?
+
+One thing we can do is "unwrap" it. This will pull the good value out if it exists, and panic (i.e, crash) otherwise: `let connection = connect(url).unwrap();`
+
+If we want it to crash with a useful message, we can `expect` it instead:
+```rust
+let connection = connect(url).expect("couldn't connect")
+```
+
+But what if we want to do one set of things if the value is good, and one if the value is bad?
+
+---
+
+# Good exception handling (3)
+
+We can use `and_then` and `or_else` to run code that only runs in the "good" and "error" case.
+
+```rust
+let report_or_error: String = 
+    connect(url)
+    .and_then(|db| { log!("connected to {}", url); Ok(db) } )
+    .and_then(|db| generate_report(db))
+    .unwrap_or_else(|err| {
+        let msg = format!("failed to connect to {}. Error: {}.", url, err);
+        log(msg); msg
+    })
+```
+
+(note: this is a sketch. In real Rust, you probably wouldn't want a single type representing both a report and an error. I don't want to introduce other Rust features right now, so we're keeping it simple.)
+
+---
+
+# Good exception handling (4)
+
+[Does that remind you of anything?]
+
+And why is it good? It doesn't jump anywhere, and you're free to inspect error values without needing to create a whole try-catch block.
+
+You also know what type the errors could be. An enum, a string, etc. You don't have to read the code to know what it's going to throw: it's included in the type.
+
+---
+
+# Good exception handling (Rust and Haskell)
+
+In Rust, `result<T, E>` is just `Either E T`. 
+
+It's the same, and it's a monad in both languages.
+
+The `>>=` operator in Haskell is named `and_then` in Rust.
+The `catchError` combinator (which we're about to talk about) is named `or_else` in Rust.
+
+The only difference is that in `Haskell`, we don't have to write "and_then" over and over, becuase it happens automatically between two statements in a `do` block. 
+
+Monads are a common computational pattern. They show up in a lot of places. But in languages that recognize them with an explicit `Monad` typeclass or interface, there is the possibility for special syntax. This is why so many cool features are "monadic".
+
+---
+
+# Let's use MonadError
+
+For comparison, here's a way we can copy the Rust approach in Haskell:
+
+```haskell
+type AppMonad' m = (MonadWriter String m, MonadError String m)
+reportOrError :: Url -> AppMonad' m => m String 
+reportOrError url = 
+    do
+        db <- liftEither $ connect url;
+        tell $ "connected to " ++ url;
+        return $ generateReport db 
+    `catchError` \err -> do
+        let msg = "failed to connect to " ++ url ++ ". Error: " ++ err 
+        tell msg ; return msg
+-- ^^^^ the part above is mostly equivalent to the Rust ^^^^
+main = do
+    (output, log) <- runWriterT $ runExceptT $ reportOrError "db.somedomain.com"
+    putStrLn $ "output was: " ++ show output -- small diff: result is an Either
+    putStrLn $ "log was: " ++ log
+```
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
+# A custom transformer
+
+We've been learning to use existing transformers: each one adds a new feature.
+
+But what if the feature we want doesn't exist?
+
+I saw a cool feature appear in a bunch of more recent systems languages like [Zig](https://ziglang.org/) and [Odin](https://odin-lang.org/). It's called the "defer" statement.
+
+In languages with this feature, you can prefix a statement with "defer", and that statement will be executed at the *end* of the current block instead of right away:
+
+```zig
+// from Zig homepage (modified slightly)
+var list: std.ArrayList(u32) = .empty; 
+const gpa = std.testing.allocator;//a memory allocator. In Zig they're explicit. 
+// Ensure the list is freed at scope exit.
+defer list.deinit(gpa);
+... // code comes after this, but list.deinit(gpa); runs at the very end!
+```
+
+---
+
+# Why defer?
+
+This feature is useful because it's very common to do "request/release" pairs. For example, requesting some memory with `malloc`, and then `free`ing it. Or requesting a file handle with `fopen`, and then `fclose`ing it. Normally, you'd have to put the free at the very end of the block:
+```c
+SomeStruct* s = malloc(sizeof(SomeStruct));
+// ... a bunch of code
+free(s); return result;
+```
+
+But there are some issues:
+1. If we early-return, we have to remember to free each time we do so.
+2. The free is as far away as possible from the malloc, making it harder to verify
+3. The frees are technically supposed to go in reverse order. Easy to mix up.
+
+---
+
+# Let's make a monad transformer!
+
+First step, let's imagine the interface:
+
+* `MonadIO` allows people to use `liftIO`
+* `MonadWriter` allows people to use `tell` (and other combinators we won't cover)
+* `MonadError` allows `throwError` and `catchError`
+
+What would make sense to be in a `MonadDefer`?
+
+---
+
+# There's really only one thing
+
+The only thing I can think of is `defer`:
+```haskell
+class Monad m => MonadDefer m where
+    defer :: m () -> m ()
+```
+
+This combinator will take a monadic action that doesn't return anything, and "save" it to be executed later.
+
+Ideally, if we call two defers in a row, we want them to execute in reverse order:
+```haskell
+defer action1
+defer action2
+```
+
+should be equivalent to `action2 >> action1`.
+
+---
+
+# A datatype and "runner"
+
+We're making a monad transformer. It doesn't make sense to "defer" a statement unless there's a monadic statement to defer...
+```haskell
+newtype DeferT m a = DeferT (m (a, m ())) 
+    deriving Functor
+```
+
+The transformer will inject a dependent `m ()` to the return type of the original monad. This is the defer action. It doesn't return anything. This is the goal:
+
+```haskell
+runDeferT :: Monad m => DeferT m a -> m a 
+runDeferT (DeferT m) = do 
+    (result, deferred) <- m -- *save* the original return value
+    deferred -- now run the defferred action (can be many >>'d together)
+    return result -- new action that returns the original result
+```
+
+---
+
+# The applicative instance
+
+```haskell
+instance Monad m => Applicative (DeferT m) where 
+    (DeferT m_f) <*> (DeferT m_x) = DeferT $ do 
+        (f, d1) <- m_f
+        (x, d2) <- m_x 
+        return (f x, d2 >> d1) -- sequence the deferrs in reverse order
+
+    pure x = DeferT (pure (x, pure ())) -- default is no deferrals: "pure ()"
+```
+
+First, we run the monad inside the first `DeferT`. We get its function `f` and defers.
+Then we run the second monad. We get its value `x` and its defers.
+The we produce a new `DeferT` that calls `f` on `x` but sequences the defers in opposite order.
+
+---
+
+# The monad instance
+
+```haskell
+instance Monad m => Monad (DeferT m) where 
+    return = pure 
+    (DeferT m_a) >>= f = DeferT $ do 
+        (a, d1) <- m_a 
+        let (DeferT m_b) = f a 
+        (b, d2) <- m_b 
+        return (b, d2 >> d1)
+```
+
+The monad instance is very similar to the `Applicative` instance, only we have to call `f` on the result of the monad inside first. 
+
+Once we have the result of `f`, we sequence it with the left `DeferT` just like how we did in the applicative. 
+
+---
+
+# The work so far
+
+We've now created a transformer that takes a monad and adds a "defer action" to it.
+
+When we sequence or bind two of these monads, we also create a new defer action by first running the second one's action and then the first.
+
+But we still haven't created a convenient way to actually defer something yet. We need to actually implement a "defer" keyword.
+
+Any ideas?
+
+---
+
+# `MonadDefer`
+
+Remember, a `MonadDefer` is any monad that supports the "defer" keyword.
+```haskell
+class Monad m => MonadDefer m where
+    defer :: m () -> m ()
+```
+
+Now let's make an instance for it:
+```haskell
+instance Monad m => MonadDefer (DeferT m) where 
+    defer (DeferT m) =      -- vv this expression took a lot of brain juice
+        DeferT $ return ((), m >>= snd) 
+        -- explanation: new defer is "execute m, then execute m's defer slot".
+        -- equivalent to: DeferT $ return ((), runDeferT m )
+```
+
+To "defer" means to create a MonadDefer which returns the action as its "defer" action.
+Here, we use `>>=` to produce a new monad that does what `m` does and then executes its second result (which is the defer actions inside the defer statement).
+
+---
+
+# What about the other typeclasses?
+
+```haskell
+instance MonadTrans DeferT where  
+    lift m_a = DeferT $ (, return ()) <$> m_a
+```
+"Lifting" a monad into defer just means giving it an empty defer action.
+Here, we're mapping the tuple constructor to whatever `m_a` returned, so now it's additionally returning an empty action (one that returns `()`). 
+
+```haskell
+instance MonadIO m => MonadIO (DeferT m) where 
+    liftIO = lift . liftIO 
+```
+
+If the inner monad is capable of `IO`, `DeferT` should also be capable of `IO`. This prevents needing to write `lift $ lift $ lift $ lift ... putStrLn`. 
+
+The code means "first call `liftIO` on the inner monad, then lift the result into `DeferT`.
+
+---
+
+# Does it work?
+
+First, what do you expect this code to do?
+
+```haskell
+deferTest :: (MonadDefer m, MonadIO m) => m ()
+deferTest = do 
+    liftIO $ putStrLn "pretend we're opening a config file with db info"
+    defer $ liftIO $ putStrLn "okay, close the file now."
+    liftIO $ putStrLn "pretend we're opening a database connection"
+    defer $ do
+        defer $ liftIO $ putStrLn "defer inside defer?" 
+        liftIO $ putStrLn "close the connection (*before* the file!)"
+    liftIO $ putStrLn "do some computation with the db..."
+
+main = runDeferT deferTest 
+```
+
+In your mind, try to guess what order the statements will actually get printed in.
+
+---
+
+# The answer
+
+It does work!
+
+```
+pretend we're opening a config file with db info
+pretend we're opening a database connection
+do some computation with the db...
+close the connection (*before* the file!)
+defer inside defer?
+okay, close the file now.
+```
+
+Even the nested defer works. "defer inside defer?" is printed after we close the connection.
+
+With this monad transformer, we can easily do whatever cleanup we need right away.
+
+---
+
+# How does it interact with ExceptT?
+
+When making monad transformers, it's important to consider how they interact with other monad transformers.
+
+In this case, we probably want `ExceptT Err (DeferT ...) a` rather than 
+`DeferT (ExceptT Err ...) a`
+
+Why? What's the difference? [any thoughts?]
+
+---
+
+# How does it interact with ExceptT? (2)
+
+`ExceptT Err m a` means "modify the monad `m` so that it returns an `Either Err a` instead of just an `a` like it normally would.
+
+`DeferT m a` means "modify the monad `m` so that it returns a `m (a, m ())` instead of just an `a`. The second of the pair (the `m ()` is interpreted as the action to run after. 
+
+`DeferT (ExceptT Err ...) a` then means add a deferral mechanism to to the underlying `ExceptT` monad. 
+
+What's wrong with that? Because the defer result would only apply when the `Either` is `Right`. In the "error" case, the defer actions wouldn't apply. "Inner" monads are more fundamental, so we're saying "the deferall function is dependent on the error funciton"
+
+That's probably not what we want: we typically want defer actions to *especially* apply in error cases. But maybe there are times when you don't. You have the option.
+
+---
+
+# But does that even work?
+
+```haskell
+deferTest2 :: (MonadDefer m, MonadIO m, MonadError String m) => m ()
+deferTest2 = do 
+    liftIO $ putStrLn "pretend we're opening a file"
+    defer $ liftIO $ putStrLn "okay, close the file"
+    throwError "throw an error though"
+
+main = do
+    result <- runDeferT $ runExceptT deferTest2
+    ...
+```
+
+Why won't this code run?
+
+---
+
+# Something is still missing
+
+In order for that code to work, this must be the type of the transformer stack:
+```haskell
+ExceptT String (DeferT IO) ()
+```
+
+The problem is, `defer` only exists in the `MonadDefer` typeclass:
+```haskell
+class Monad m => MonadDefer m where
+    defer :: m () -> m ()
+```
+
+So that means, `Except` does not support `defer`!
+
+Are we doomed?
+
+---
+
+# We're not doomed
+
+We can just say "hey, if we wrap except around something that supports `defer`, then the except also supports `defer`.
+```haskell
+instance MonadDefer m => MonadDefer (ExceptT s m) where 
+    defer :: MonadDefer m => ExceptT s m () -> ExceptT s m ()
+    defer (ExceptT m)  = lift $ defer $ void m 
+```
+
+The logic is that if the monad inside the `ExceptT` supports defer, then run the action ignoring the result (what void m does) and lift that deferred action into an `ExceptT`.
+
+This raises questions about what happens if an error happens inside some deferred code. This code here will throw away those `Left` values.
+
+Could we fix this? Sure, but it would require changing the semantics of `defer`.  
 
 
 ---
 
-# A deferring transformer
+# Working 
 
---- 
+```haskell
+deferTest2 :: (MonadDefer m, MonadIO m, MonadError String m) => m ()
+deferTest2 = do 
+    liftIO $ putStrLn "pretend we're opening a file"
+    defer $ liftIO $ putStrLn "okay, close the file"
+    liftIO $ putStrLn "now operate on the file"
+    throwError "throw an error though"
+    defer $ liftIO $ putStrLn "this won't happen because we threw."
+    liftIO $ putStrLn "more operations that won't run, but we still want to clean up!"
+main = do 
+    result <- runDeferT $ runExceptT deferTest2
+    print result 
+```
+```
+pretend we're opening a file
+now operate on the file
+okay, close the file
+Left "throw an error though"
+```
+
+We threw an error but the file still got closed!
+
+---
+
+# The n-squared problem
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
+---
+
+# Finishing up
+
+We've covered a truly enormous amount of material this semester. 
+
+Haskell has likely made you aware of just how real brain-fatigue is. It certainly did me!
+
+But there are a few takeaways I want you to have that I hope have come through...
+
+---
+
+# Some takeaways
+
+Programming languages can start with what is easy to compute. "We know we have to generate assembly or intermediate code. What are the most advanced features we can handle?"
+
+But they can also start from the other end. "We know what is possible to express mathematically. How much of that can be turned into a runnable comptuation?"
+
+Haskell is likely the first language you learned of the second type.
+
+By starting with math, we unlock a kind of "idea purity" that is very interesting. We abstract things so much that everything we're left with is essential. 
+
+A monad is kind of the "essential" idea of a dynamic computational structure. A primitive kind of program which can be executed. 
+
+---
+
+# Some takeaways (2)
+
+Since a monad is the "essence" of data-dependent sequential computation, any time you represent that, you're going to end up building a monad, intentionally or not:
+* Your event scripting system in your video game is probably a monad
+* The logic driving your dynamic music visualizer is probably a monad
+* Your async logic that allows you to encode threads of computation in a promise in Javascript is monadic (and sometimes is literally a monad: it's just `IO` in Haskell).
+* Your custom logging system is probably a monad. Or at least, it *could* be one.
+* Your configuration system that makes the global configuration available as a singleton is probably a monad.
+* Your exception system is probably a monad.
+
+If you know the theory, you can use it deliberately instead of haphazardly.
+
+---
+
+# Some takeaways (3)
+
+Because of the fact that so many things are monads, you can either understand what a monad is conceptually and write your system to benefit from the theory behind them...
+
+...or you don't. And you end up with Java's exception system. Or Java's singleton classes. Or Java's initial threading system in which every object was implicitly a monitor. 
+
+What's wrong with Java? Bad theory meant that you have to interact with a bunch of random details to use its features, because the "essence" of ideas was not discovered. For example: there's no generic syntax to sequence Streams, Optionals, and Futures, because they didn't know about monads (i.e., there's no `do` notation or HKTs).
+
+Basically, with incomplete theory, you end up with Java v. 1.0! And nobody wants that.
+
+(they've honestly fixed a lot of Java by incorporating these higher-math ideas, so another valuable lesson is that no system is impossible to clean up!)
 
 
+---
+
+# More than monads?
+
+Of course, monads are not the only comptuational structure that we can use.
+
+They are a very useful, powerful one, but not the only one. 
+
+---
+
+# Comparison with Macros 
+
+One powerful way to add features to a language is "macros".
+
+We talked about them briefly when learning Lisp. A macro is a function that takes an abstract syntax tree and returns one.
+
+You can also use them to add new features to a language. Like this macro I use in the Fennel programming language to add "incrementing" to the language:
+```fennel
+(macro inc! [x] `(set ,x (+ 1 ,x)))
+```
+
+It makes it so that whenever you write `inc!`, the token to its right is interpreted as a variable. We end up generating the code `(set varName (+ 1 varName))`, which is incrementing.
+
+---
+
+# Comparison with Macros (2)
+
+Macros are actually "differently powerful" than monads. They let you write code that tells the compiler how to generate code.
+
+In some ways, this is more powerful. We can actually customize raw syntactic rules to inject a completely custom programming language into our language.
+
+However, it's less composable. I couldn't necessarily combine the features of two such custom languages. 
+
+Monads, through the transformer concept, are highly composable. We can add new features to our stack by inserting another transformer layer or adding another type constraint. 
+
+But could they be even more composable?
+
+---
 
 # Algebraic Effects
-
----
-
-# Effects: a custom language within a language
 
 ---
 
