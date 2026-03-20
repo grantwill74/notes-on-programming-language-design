@@ -1707,13 +1707,139 @@ We threw an error but the file still got closed!
 
 ---
 
+# I still hate writing `liftIO`!
+
+Understandable. This is a weakness in the prelude IO functions.
+
+The prelude is just the set of modules and functions that are imported by default.
+
+There are other preludes, and the langauge is customizable enough to use them.
+
+[This one](https://hackage.haskell.org/package/protolude) replaces `putStrLn :: String -> IO ()` with [`MonadIO m => putStrLn :: String -> m ()`](https://hackage-content.haskell.org/package/protolude-0.3.5/docs/Protolude.html#v:putStrLn).
+
+So if you use protolude, you don't have to `liftIO`, as long as your transformer stack has a `MonadIO` in it.
+
+But there is a deeper problem with the code we've seen...
+
+---
+
 # The n-squared problem
+
+We had to make a special instance of `MonadDefer` for `MonadErrors` whose inner monads supported `MonadDefer`.
+
+If we want a transformer stack to be `MonadDefer` when the top transformer is not `DeferT`, then we have to have every transformer above `DeferT` be `MonadDefer`.
+
+Likewise, if we want a transformer stack to be `MonadIO`, we need every transformer above `IO` to also be `MonadIO`. Frequently this is all of them. 
+
+In fact, every time we add a new transformer, we often need to then implement `MonadWhatever` on every *other* trnasformer.
+
+This means that if we have `n` transformers, we actually need up to `n^2` instances to be defined. I've seen this called the "n-squared instances problem" for this reason. There is a solution...
 
 ---
 
 # Questions?
 
 <!-- _class: invert questions -->
+
+---
+
+# Algebraic effects
+
+Okay, for real this time, you are not required to learn this and I haven't gone and implemented a language feature in it.
+
+But there is a strategy to fixing the n-squared instances problem that is exciting and has been catching on in many other functional programming languages ([OCaml](https://ocaml.org/) and [FSharp](https://fsharp.org/) in particular)
+
+It's called *Algebraic Effects*. [Haskell supports it too](https://hackage.haskell.org/package/fused-effects).
+
+
+---
+
+# Algebraic effects (2)
+
+The basic idea is that instead of creating a monad transformer, you create a data type that encodes the operations you are interested in. For a `State` effect, we could create a type like [this](https://github.com/fused-effects/fused-effects/blob/main/docs/defining_effects.md):
+
+```haskell
+data Teletype (m :: Type -> Type) k where
+  Read  ::           Teletype m String
+  Write :: String -> Teletype m ()
+```
+
+Those are special commands that will become available to use inside of any monad `m` that has the `Teletype` effect in its signature `sig`.
+
+(note, `data ... where` is using an advanced feature called [Generalized Algebraic Data Types](https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/gadt.html) (GADTs)--it lets us give constructors more precise types so we don't have to pattern match everywhere) 
+
+---
+
+# Algebraic effects (3)
+
+Somewhere else, you define an `Algebra` that is basically an interpreter for these custom messages.
+
+```haskell
+newtype TeletypeIOC m a = TeletypeIOC { runTeletypeIO :: m a }
+  deriving (Applicative, Functor, Monad, MonadIO)
+
+instance (MonadIO m, Algebra sig m) => Algebra (Teletype :+: sig) (TeletypeIOC m) where
+  alg hdl sig ctx = case sig of
+    L Read      -> (<$ ctx) <$> liftIO getLine
+    L (Write s) -> ctx      <$  liftIO (putStrLn s)
+    R other     -> TeletypeIOC (alg (runTeletypeIO . hdl) other ctx)
+```
+
+Don't worry too much about understanding this. Focus on the fact that this algebra can be "injected" into a tree of types (the `:+:` is a type constructor for these) and it does the operations it recognizes. It then leaves other operations to other algebras (the `R other` part). 
+
+---
+
+# Algebraic effects (4)
+
+The "algebraic" part is that we can compose effects. We can use them like the constraints on our monads before. 
+
+What's cool though is that we only require one of those algebras per effect. We don't need n^2. 
+
+---
+
+# Why?
+
+Writing with algebraic effects is like defining a custom language that exactly matches your problem space. I've heard it called a "custom alphabet" (using a state machine metaphor).
+
+Think of it as like a type-safe, debuggable, custom scripting language.
+
+A domain-specific language.
+
+This seems like a powerful ability and it is. What is its cmpetitor?
+
+---
+
+# Comparison with Macros 
+
+One powerful way to add features to a language is "macros".
+
+We talked about them briefly when learning Lisp. A macro is a function that takes an abstract syntax tree and returns one.
+
+You can also use them to add new features to a language. Like this macro I use in the Fennel programming language to add "incrementing" to the language:
+```fennel
+(macro inc! [x] `(set ,x (+ 1 ,x)))
+```
+
+It makes it so that whenever you write `inc!`, the token to its right is interpreted as a variable. We end up generating the code `(set varName (+ 1 varName))`, which is incrementing.
+
+---
+
+# Comparison with Macros (2)
+
+Macros are actually a bit more powerful individually than monads or effects. They let you write code that tells the compiler how to generate code. (The fused effects library uses macros in Haskell)
+
+In some ways, this is more powerful. We can actually customize raw syntactic rules to inject a completely custom programming language into our language.
+
+However, it's less composable. I couldn't necessarily combine the features of two such custom languages. 
+
+Monads, through the transformers or effects, are highly composable. We can add new features to our stack by inserting another transformer layer or adding another type constraint. 
+
+---
+
+# Questions?
+
+<!-- _class: invert questions -->
+
 
 ---
 
@@ -1737,19 +1863,19 @@ Haskell is likely the first language you learned of the second type.
 
 By starting with math, we unlock a kind of "idea purity" that is very interesting. We abstract things so much that everything we're left with is essential. 
 
-A monad is kind of the "essential" idea of a dynamic computational structure. A primitive kind of program which can be executed. 
+A monad is kind of the "essential" idea of a dynamic computational structure. A primitive kind of program which can be executed. And an effect is something that the abstract computer can do.
 
 ---
 
 # Some takeaways (2)
 
-Since a monad is the "essence" of data-dependent sequential computation, any time you represent that, you're going to end up building a monad, intentionally or not:
-* Your event scripting system in your video game is probably a monad
-* The logic driving your dynamic music visualizer is probably a monad
+Since a monad is the "essence" of data-dependent sequential computation, any time you need that, you're going to use/make a monad (or effect), intentionally or not:
+* Your event scripting system in your video game is probably monadic
+* The logic driving your dynamic music visualizer is probably monadic
 * Your async logic that allows you to encode threads of computation in a promise in Javascript is monadic (and sometimes is literally a monad: it's just `IO` in Haskell).
-* Your custom logging system is probably a monad. Or at least, it *could* be one.
-* Your configuration system that makes the global configuration available as a singleton is probably a monad.
-* Your exception system is probably a monad.
+* Your custom logging system is probably monadic. Or at least, it *could* be one.
+* Your configuration system that makes the global configuration available as a singleton is monadic (reader)
+* Your exception system is probably monadic.
 
 If you know the theory, you can use it deliberately instead of haphazardly.
 
@@ -1770,50 +1896,11 @@ Basically, with incomplete theory, you end up with Java v. 1.0! And nobody wants
 
 ---
 
-# More than monads?
-
-Of course, monads are not the only comptuational structure that we can use.
-
-They are a very useful, powerful one, but not the only one. 
-
----
-
-# Comparison with Macros 
-
-One powerful way to add features to a language is "macros".
-
-We talked about them briefly when learning Lisp. A macro is a function that takes an abstract syntax tree and returns one.
-
-You can also use them to add new features to a language. Like this macro I use in the Fennel programming language to add "incrementing" to the language:
-```fennel
-(macro inc! [x] `(set ,x (+ 1 ,x)))
-```
-
-It makes it so that whenever you write `inc!`, the token to its right is interpreted as a variable. We end up generating the code `(set varName (+ 1 varName))`, which is incrementing.
-
----
-
-# Comparison with Macros (2)
-
-Macros are actually "differently powerful" than monads. They let you write code that tells the compiler how to generate code.
-
-In some ways, this is more powerful. We can actually customize raw syntactic rules to inject a completely custom programming language into our language.
-
-However, it's less composable. I couldn't necessarily combine the features of two such custom languages. 
-
-Monads, through the transformer concept, are highly composable. We can add new features to our stack by inserting another transformer layer or adding another type constraint. 
-
-But could they be even more composable?
-
----
-
-# Algebraic Effects
-
----
-
-# Metalanguages
-
----
 
 # Conclusion
 
+There will be more math developed and more advanced programming language features.
+
+Remember the blub paradox. We are always blub programmers. Haskell is blub!
+
+Never stop learning! 
