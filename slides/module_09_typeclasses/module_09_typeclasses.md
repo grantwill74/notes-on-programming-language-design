@@ -1573,7 +1573,7 @@ This is a distinction between an array of structures (or classes) and a structur
 
 We call this AOS vs. SOA. Sometimes one is more performant or convenient than the other.
 
-Classes are built around an SOA assumption, which is a good assumption most of the time, but not always.
+Classes are built around an AOS assumption, which is a good assumption most of the time, but not always.
 
 On the other hand, what if you were never using classes to begin with? Your module may have used handles for game objects with totally independent data structures. 
 
