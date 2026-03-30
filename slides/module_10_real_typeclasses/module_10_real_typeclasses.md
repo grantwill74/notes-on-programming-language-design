@@ -1288,7 +1288,7 @@ instance Monoid SumPair where
 
 # Practice quiz 2 
 
-1. (25%) Consider the `min` operation between two integers. It returns the more negative of the two. `min 2 3 == 2`. `min -2 0 == -2`. Define a datatype that will be a semigroup wrapper for integers that we want to apply this operation to. I.e., we want `Min 20 <> Min 15 == Min 15`
+1. (25%) Consider the `min` operation between two `Integer`s. It returns the more negative of the two. `min 2 3 == 2`. `min -2 0 == -2`. Define a datatype that will be a semigroup wrapper for integers that we want to apply this operation to. I.e., we want `Min 20 <> Min 15 == Min 15`
 2. (25%) Make that data type a `Semigroup`. You can assume the funciton `min` exists.
 3. (25%) Can we make this data type a `Monoid`? If so, do so. Otherwise, clearly explain why it is impossible.
 4. (25%) Can we make this data type a `Functor`? If so, do so. Otherwise, clearly explain why it is impossible.
