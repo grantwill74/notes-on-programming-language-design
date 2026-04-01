@@ -317,7 +317,7 @@ main :: IO ()
 main =
     putStrLn "Please enter your name: " >>
     getLine >>= 
-        (\name -> putStrLn "Hello, " ++ name)
+        (\name -> putStrLn $ "Hello, " ++ name)
 ```
 
 Here, there is a `>>` after `putStrLn` to stitch it together with `getLine`. But we use `>>=` after `getLine` because we need more complicated functionality. We stitch it with a function that will eventually receive a string when `getLine` is run, and it will use that string to produce a new program, which prints `Hello` along with that string.
@@ -377,9 +377,9 @@ Let's get a name and password together...
 ```haskell
 main = 
     putStrLn "enter your character's name: " >>
-    getStrLn >>= (\name ->
+    getLine >>= (\name ->
         putStrLn "enter this character's password: " >>
-        getStrLn >>= (\pass ->
+        getLine >>= (\pass ->
             putStrLn $ "registering character " ++ name ++ " with password " ++ pass
         )
     )
