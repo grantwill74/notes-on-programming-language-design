@@ -1156,7 +1156,7 @@ What should "+" do?
 evalBuiltin "+" args = compileAdd $ expectInt <$> args
 ```
 
-We have a helper function called `compileAdd`, but it expects a list of integers. Lisp is dynamically typed, so the values we pass to it could be anything. We don't want to accept lists or symbols, we just want to add ints. So we use `expectInt` to force it.
+We have a helper function called `evalAdd`, but it expects a list of integers. Lisp is dynamically typed, so the values we pass to it could be anything. We don't want to accept lists or symbols, we just want to add ints. So we use `expectInt` to force it.
 
 ```haskell
 expectInt :: Value -> Integer 
@@ -1198,7 +1198,7 @@ So, our print function can return an `IO Value` which prints, and then returns w
 
 # Understanding print (2)
 
-Let's extend our `compileBuiltin` function:
+Let's extend our `evalBuiltin` function:
 ```haskell
 evalBuiltin "print" args = evalPrint args
 ```
@@ -1724,9 +1724,7 @@ This will be very easy for anyone who has been paying attention.
 
 # Quiz format
 
-The quiz will be a mix of multiple choice, short answer, and true-false questions. 
-
-Each one will be worth 20%
+The quiz will be a handful of fairly easy multiple-choice, short answer, true false, or light coding questions.
 
 That's it.
 
