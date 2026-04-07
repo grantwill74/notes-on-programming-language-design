@@ -509,7 +509,7 @@ class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;Please enter your name: &quot;</span> <span class="op">&gt;&gt;</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getLine</span> <span class="op">&gt;&gt;=</span> </span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        (\name <span class="ot">-&gt;</span> <span class="fu">putStrLn</span> <span class="st">&quot;Hello, &quot;</span> <span class="op">++</span> name)</span></code></pre></div>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        (\name <span class="ot">-&gt;</span> <span class="fu">putStrLn</span> <span class="op">$</span> <span class="st">&quot;Hello, &quot;</span> <span class="op">++</span> name)</span></code></pre></div>
 <p>Here, there is a <code>&gt;&gt;</code> after <code>putStrLn</code> to
 stitch it together with <code>getLine</code>. But we use
 <code>&gt;&gt;=</code> after <code>getLine</code> because we need more
@@ -568,9 +568,9 @@ inject into your program.</p>
 <div class="sourceCode" id="cb13"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>main <span class="ot">=</span> </span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">putStrLn</span> <span class="st">&quot;enter your character&#39;s name: &quot;</span> <span class="op">&gt;&gt;</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    getStrLn <span class="op">&gt;&gt;=</span> (\name <span class="ot">-&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">getLine</span> <span class="op">&gt;&gt;=</span> (\name <span class="ot">-&gt;</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">putStrLn</span> <span class="st">&quot;enter this character&#39;s password: &quot;</span> <span class="op">&gt;&gt;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        getStrLn <span class="op">&gt;&gt;=</span> (\pass <span class="ot">-&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="fu">getLine</span> <span class="op">&gt;&gt;=</span> (\pass <span class="ot">-&gt;</span></span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>            <span class="fu">putStrLn</span> <span class="op">$</span> <span class="st">&quot;registering character &quot;</span> <span class="op">++</span> name <span class="op">++</span> <span class="st">&quot; with password &quot;</span> <span class="op">++</span> pass</span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        )</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div>
@@ -1203,11 +1203,10 @@ on the given arguments.</p>
 <h1 id="lets-start-with-3">Let’s start with <code>+</code> (3)</h1>
 <div class="sourceCode" id="cb52"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>evalBuiltin <span class="st">&quot;+&quot;</span> args <span class="ot">=</span> compileAdd <span class="op">$</span> expectInt <span class="op">&lt;$&gt;</span> args</span></code></pre></div>
-<p>We have a helper function called <code>compileAdd</code>, but it
-expects a list of integers. Lisp is dynamically typed, so the values we
-pass to it could be anything. We don’t want to accept lists or symbols,
-we just want to add ints. So we use <code>expectInt</code> to force
-it.</p>
+<p>We have a helper function called <code>evalAdd</code>, but it expects
+a list of integers. Lisp is dynamically typed, so the values we pass to
+it could be anything. We don’t want to accept lists or symbols, we just
+want to add ints. So we use <code>expectInt</code> to force it.</p>
 <div class="sourceCode" id="cb53"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ot">expectInt ::</span> <span class="dt">Value</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span> </span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>expectInt (<span class="dt">VInt</span> i) <span class="ot">=</span> i </span>
@@ -1247,7 +1246,7 @@ prints, and then returns whatever it wants (we don’t really care about
 the return value here).</p>
 <hr />
 <h1 id="understanding-print-2">Understanding print (2)</h1>
-<p>Let’s extend our <code>compileBuiltin</code> function:</p>
+<p>Let’s extend our <code>evalBuiltin</code> function:</p>
 <div class="sourceCode" id="cb55"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>evalBuiltin <span class="st">&quot;print&quot;</span> args <span class="ot">=</span> evalPrint args</span></code></pre></div>
 <p>And then define <code>evalPrint</code>:</p>
@@ -1657,9 +1656,8 @@ you to evaluate and classify them and their features.</p>
 <p>This will be very easy for anyone who has been paying attention.</p>
 <hr />
 <h1 id="quiz-format">Quiz format</h1>
-<p>The quiz will be a mix of multiple choice, short answer, and
-true-false questions.</p>
-<p>Each one will be worth 20%</p>
+<p>The quiz will be a handful of fairly easy multiple-choice, short
+answer, true false, or light coding questions.</p>
 <p>That’s it.</p>
 <hr />
 <h1 id="sample-quiz-1">Sample quiz 1</h1>
