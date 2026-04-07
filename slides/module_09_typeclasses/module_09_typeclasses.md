@@ -901,7 +901,7 @@ This convenient feature can be used on more than just `Show`.
 
 For example, we can also do deriving read:
 ```haskell
-class Pair a = Pair a a deriving (Show, Read)
+data Pair a = Pair a a deriving (Show, Read)
 -- we can put it on one line. Useful in GHCI.
 ```
 

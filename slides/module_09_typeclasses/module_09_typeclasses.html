@@ -991,7 +991,7 @@ same thing, but include the braces and field names.</p>
 <code>Show</code>.</p>
 <p>For example, we can also do deriving read:</p>
 <div class="sourceCode" id="cb35"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="dt">Pair</span> a <span class="ot">=</span> <span class="dt">Pair</span> a a <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Read</span>)</span>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Pair</span> a <span class="ot">=</span> <span class="dt">Pair</span> a a <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Read</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- we can put it on one line. Useful in GHCI.</span></span></code></pre></div>
 <div class="sourceCode" id="cb36"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>ghci<span class="op">&gt;</span> <span class="fu">show</span> <span class="op">$</span> <span class="dt">Pair</span> <span class="dv">10</span> <span class="dv">20</span></span>
@@ -1590,7 +1590,7 @@ component system, which is based on this principle.</p>
 a structure of arrays.</p>
 <p>We call this AOS vs. SOA. Sometimes one is more performant or
 convenient than the other.</p>
-<p>Classes are built around an SOA assumption, which is a good
+<p>Classes are built around an AOS assumption, which is a good
 assumption most of the time, but not always.</p>
 <p>On the other hand, what if you were never using classes to begin
 with? Your module may have used handles for game objects with totally
