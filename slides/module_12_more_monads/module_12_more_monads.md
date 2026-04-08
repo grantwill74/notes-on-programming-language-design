@@ -874,9 +874,9 @@ Let's make a password checker. If a password is bad, it returns why.
 ```haskell
 goodPassword :: String -> Either String ()
 goodPassword pwd = do
-    when (atLeastOneUpper pwd) (Left "Must have at least one uppercase letter")
-    when (atLeastOneLower pwd) (Left "Must have at least one lowercase letter")
-    when (atLeastOneSymbol pwd) ...
+    when (not . atLeastOneUpper pwd) (Left "Must have at least one uppercase letter")
+    when (not . atLeastOneLower pwd) (Left "Must have at least one lowercase letter")
+    when (not . atLeastOneSymbol pwd) ...
 ```
 
 If we get through all the checks, we just end up with `Right ()`, indicating the password is good. But if we fail, we actually know why.
