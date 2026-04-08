@@ -1445,18 +1445,19 @@ class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb32-1"><a
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- 2.: Pair 21 24</span></span>
 <span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- 3.</span></span>
 <span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Semigroup</span> <span class="dt">SumPair</span> <span class="kw">where</span></span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Pair</span> a b) <span class="op">&lt;&gt;</span> (<span class="dt">Pair</span> x y) <span class="ot">=</span> <span class="dt">Pair</span> (a <span class="op">+</span> x) (b <span class="op">+</span> y)</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">SumPair</span> a b) <span class="op">&lt;&gt;</span> (<span class="dt">SumPair</span> x y) <span class="ot">=</span> <span class="dt">SumPair</span> (a <span class="op">+</span> x) (b <span class="op">+</span> y)</span>
 <span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- 4. Yes:</span></span>
 <span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monoid</span> <span class="dt">SumPair</span> <span class="kw">where</span> </span>
 <span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">SumPair</span> <span class="dv">0</span> <span class="dv">0</span></span></code></pre></div>
 <hr />
 <h1 id="practice-quiz-2">Practice quiz 2</h1>
 <ol type="1">
-<li>(25%) Consider the <code>min</code> operation between two integers.
-It returns the more negative of the two. <code>min 2 3 == 2</code>.
-<code>min -2 0 == -2</code>. Define a datatype that will be a semigroup
-wrapper for integers that we want to apply this operation to. I.e., we
-want <code>Min 20 &lt;&gt; Min 15 == Min 15</code></li>
+<li>(25%) Consider the <code>min</code> operation between two
+<code>Integer</code>s. It returns the more negative of the two.
+<code>min 2 3 == 2</code>. <code>min -2 0 == -2</code>. Define a
+datatype that will be a semigroup wrapper for integers that we want to
+apply this operation to. I.e., we want
+<code>Min 20 &lt;&gt; Min 15 == Min 15</code></li>
 <li>(25%) Make that data type a <code>Semigroup</code>. You can assume
 the funciton <code>min</code> exists.</li>
 <li>(25%) Can we make this data type a <code>Monoid</code>? If so, do
@@ -1514,13 +1515,13 @@ class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb34-1"><a
 <h1 id="practice-quiz-4">Practice quiz 4</h1>
 <p>Consider this color-storing data type. It stores <code>RGB</code>
 colors in 3 fields, one for red, one for green, and one for blue:
-<code>data Rgb = Rgb Int Int Int deriving (Ord, Eq, Show)</code> 1.
+<code>data Rgb = Rgb Byte Byte Byte deriving (Ord, Eq, Show)</code> 1.
 (25%) Make the datatype bounded by making it an instance of the
 <code>Bounded a</code> typeclass. This means you must provide a
 <code>minBound :: a</code> and <code>maxBound :: a</code>. Make the
 minimum value for each of the 3 values 0, and the maximum value 255. 2.
 (25%) Write a function <code>clamp</code> which takes any bounded value
-(not just <code>Rgb</code>) and “clamps” it so taht if it’s less than
+(not just <code>Rgb</code>) and “clamps” it so that if it’s less than
 <code>minBound</code> it returns <code>minBound</code>, if it is greater
 than <code>maxBound</code> it returns <code>maxBound</code>, and if it’s
 between, returns the unmodified value. 3. (25%) Make it a Semigroup such
@@ -1542,7 +1543,7 @@ class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb35-1"><a
 <span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Semigroup</span> <span class="dt">Rgb</span> <span class="kw">where</span> </span>
 <span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    (<span class="dt">Rgb</span> a b c) <span class="op">&lt;&gt;</span> (<span class="dt">Rgb</span> x y z) <span class="ot">=</span> </span>
-<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>        clamp <span class="op">$</span> <span class="dt">Rgb</span> (a <span class="op">+</span> x) (b <span class="op">+</span> y) (c <span class="op">+</span> z)</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Rgb</span> (clamp (a <span class="op">+</span> x)) (clamp (b <span class="op">+</span> y)) (clamp (c <span class="op">+</span> z))</span>
 <span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="kw">instance</span> <span class="dt">Monoid</span> <span class="dt">Rgb</span> <span class="kw">where</span> </span>
 <span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mempty</span> <span class="ot">=</span> <span class="dt">Rgb</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span></span></code></pre></div>

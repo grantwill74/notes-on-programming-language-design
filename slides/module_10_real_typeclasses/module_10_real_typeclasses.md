@@ -1278,7 +1278,7 @@ instance Functor Pair where
 -- 2.: Pair 21 24
 -- 3.
 instance Semigroup SumPair where
-    (Pair a b) <> (Pair x y) = Pair (a + x) (b + y)
+    (SumPair a b) <> (SumPair x y) = SumPair (a + x) (b + y)
 -- 4. Yes:
 instance Monoid SumPair where 
     mempty = SumPair 0 0
@@ -1339,9 +1339,9 @@ liftA2 (*) (Triplet 1 2 3) (Triplet 3 2 1) == Triplet 3 4 3
 
 # Practice quiz 4
 
-Consider this color-storing data type. It stores `RGB` colors in 3 fields, one for red, one for green, and one for blue: `data Rgb = Rgb Int Int Int deriving (Ord, Eq, Show)`
+Consider this color-storing data type. It stores `RGB` colors in 3 fields, one for red, one for green, and one for blue: `data Rgb = Rgb Byte Byte Byte deriving (Ord, Eq, Show)`
 1. (25%) Make the datatype bounded by making it an instance of the `Bounded a` typeclass. This means you must provide a `minBound :: a` and `maxBound :: a`. Make the minimum value for each of the 3 values 0, and the maximum value 255.
-2. (25%) Write a function `clamp` which takes any bounded value (not just `Rgb`) and "clamps" it so taht if it's less than `minBound` it returns `minBound`, if it is greater than `maxBound` it returns `maxBound`, and if it's between, returns the unmodified value.
+2. (25%) Write a function `clamp` which takes any bounded value (not just `Rgb`) and "clamps" it so that if it's less than `minBound` it returns `minBound`, if it is greater than `maxBound` it returns `maxBound`, and if it's between, returns the unmodified value.
 3. (25%) Make it a Semigroup such that `<>` adds the 3 colors but keeps then in bounds (i.e., it clamps the result).
 4. (25%) Make it a `Monoid` or explain why you can't.
 
@@ -1362,7 +1362,7 @@ clamp x
 
 instance Semigroup Rgb where 
     (Rgb a b c) <> (Rgb x y z) = 
-        clamp $ Rgb (a + x) (b + y) (c + z)
+        Rgb (clamp (a + x)) (clamp (b + y)) (clamp (c + z))
 
 instance Monoid Rgb where 
     mempty = Rgb 0 0 0
