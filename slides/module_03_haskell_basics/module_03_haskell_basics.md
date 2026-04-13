@@ -56,7 +56,7 @@ There are several Haskell compilers, but the main one is [GHC](https://www.haske
 
 # Basic programming language facts
 
-Haskell is (usulaly) a compiled language, meaning that we run the compiler on Haskell source code to generate an executable that can be run later.
+Haskell is (usually) a compiled language, meaning that we run the compiler on Haskell source code to generate an executable that can be run later.
 
 Haskell is statically typed, meaning that the types of variables and expressions is known at compile time ("statically" means at compile time, "dynamically" means at run time).
 
@@ -297,7 +297,7 @@ Consider the strange syntax. Notice that we write: `main = ...` and not `main { 
 
 Because it is a mathematical definition. We are saying that main is a constant that contains the value `putStrLn "Hello, World"`.
 
-But `putStrLn` is a function, not a value, right?
+But `putStrLn "Hello, World"` is a function call, not a value, right?
 
 ---
 
@@ -516,7 +516,7 @@ Anyway, they can be named the same as C variables: no number up front, but any c
 
 Haskell usually uses camelCase rather than snake_case, but you can use either.
 
-However, unlike C, you can put a `` ` `` ("prime") anywhere but the first character.
+However, unlike C, you can put a `` ' `` ("prime") anywhere but the first character.
 
 So `hello'` and `world''` and technically `w''orld` (but don't do that) are valid names.
 
@@ -536,7 +536,7 @@ Haskell has a number of basic types that should be pretty familiar:
 
 <div class="footnote">
 
-* most common printed characters have exactly one codepoint unless you're doing Zalgo text or something. Can be more than one codepoint for complicated characters or visual characters.
+\* Most common printed characters have exactly one codepoint unless you're doing Zalgo text or something. Can be more than one codepoint for complicated characters or visual characters.
 
 </div>
 
