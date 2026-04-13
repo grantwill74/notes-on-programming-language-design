@@ -1342,8 +1342,6 @@ The second value is the result of the computation.
 
 This is true of every monad: the last value in its type is the "return" value. It's the result. If you write `return 7`, you will create a monad that has that value in its "return slot". 
 
-So think of 
-
 ---
 
 # Knowledge Check
@@ -1413,7 +1411,7 @@ def aIndices(str):
     return result
 ```
 ```haskell
-aIndices'' :: String -> [Int]
+aIndices'' :: String -> Writer [Int] ()
 aIndices'' str = execWriter $ 
     forM_ (zip [0..] str) 
         (\(i, c) -> when (c == 'a') (tell [i]))
@@ -1438,7 +1436,7 @@ However, if we put a `Writer String a` besides a `Writer String b` in a `do` blo
 
 If we want to manually concat some data to the writer, we can use `tell`.
 
-`tell` will take a monoid and `<>` it with whatever is in the current writer we are building (often in a `do` block).
+`tell` will take a monoid and load it into a `Writer w`, where `w` is the type of the monoid.
 
 If all of the values you want to `<>` follow a pattern, you probably don't need `Writer`. But if they are irregular (like logging messages), `Writer` and `tell` can be very useful.
 
