@@ -968,9 +968,9 @@ why.</p>
 <div class="sourceCode" id="cb34"><pre
 class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ot">goodPassword ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> ()</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>goodPassword pwd <span class="ot">=</span> <span class="kw">do</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    when (atLeastOneUpper pwd) (<span class="dt">Left</span> <span class="st">&quot;Must have at least one uppercase letter&quot;</span>)</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    when (atLeastOneLower pwd) (<span class="dt">Left</span> <span class="st">&quot;Must have at least one lowercase letter&quot;</span>)</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    when (atLeastOneSymbol pwd) <span class="op">...</span></span></code></pre></div>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    when (<span class="fu">not</span> <span class="op">.</span> atLeastOneUpper pwd) (<span class="dt">Left</span> <span class="st">&quot;Must have at least one uppercase letter&quot;</span>)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    when (<span class="fu">not</span> <span class="op">.</span> atLeastOneLower pwd) (<span class="dt">Left</span> <span class="st">&quot;Must have at least one lowercase letter&quot;</span>)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    when (<span class="fu">not</span> <span class="op">.</span> atLeastOneSymbol pwd) <span class="op">...</span></span></code></pre></div>
 <p>If we get through all the checks, we just end up with
 <code>Right ()</code>, indicating the password is good. But if we fail,
 we actually know why.</p>
@@ -1379,7 +1379,6 @@ return an <code>Int</code>.</p>
 <p>This is true of every monad: the last value in its type is the
 “return” value. It’s the result. If you write <code>return 7</code>, you
 will create a monad that has that value in its “return slot”.</p>
-<p>So think of</p>
 <hr />
 <h1 id="knowledge-check">Knowledge Check</h1>
 <ol type="1">
@@ -1445,7 +1444,7 @@ class="sourceCode python"><code class="sourceCode python"><span id="cb56-1"><a h
 <span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> c <span class="op">==</span> <span class="st">&#39;a&#39;</span>: result.append(i)</span>
 <span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result</span></code></pre></div>
 <div class="sourceCode" id="cb57"><pre
-class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ot">aIndices&#39;&#39; ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">Int</span>]</span>
+class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ot">aIndices&#39;&#39; ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> [<span class="dt">Int</span>] ()</span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>aIndices&#39;&#39; str <span class="ot">=</span> execWriter <span class="op">$</span> </span>
 <span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    forM_ (<span class="fu">zip</span> [<span class="dv">0</span><span class="op">..</span>] str) </span>
 <span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>        (\(i, c) <span class="ot">-&gt;</span> when (c <span class="op">==</span> <span class="ch">&#39;a&#39;</span>) (tell [i]))</span></code></pre></div>
@@ -1466,9 +1465,9 @@ will automatically <code>++</code> the two strings together.</p>
 <h1 id="writer-summary-2">Writer summary (2)</h1>
 <p>If we want to manually concat some data to the writer, we can use
 <code>tell</code>.</p>
-<p><code>tell</code> will take a monoid and <code>&lt;&gt;</code> it
-with whatever is in the current writer we are building (often in a
-<code>do</code> block).</p>
+<p><code>tell</code> will take a monoid and load it into a
+<code>Writer w</code>, where <code>w</code> is the type of the
+monoid.</p>
 <p>If all of the values you want to <code>&lt;&gt;</code> follow a
 pattern, you probably don’t need <code>Writer</code>. But if they are
 irregular (like logging messages), <code>Writer</code> and
