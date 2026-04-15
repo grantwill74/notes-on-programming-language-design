@@ -1622,7 +1622,7 @@ Here are some practice questions. All of them are the type of question that coul
 
 # Exam practice 1
 
-Refactor `generateReport` so that it uses `Either Error` as a monad rather than `case`.
+Refactor `report` so that it uses `Either Error` as a monad rather than `case`.
 
 ```haskell
 type Error = String
