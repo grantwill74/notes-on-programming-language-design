@@ -7,7 +7,7 @@ These include the lecture slides that I use, as well as some practice problems,
 and even assignments.
 
 If you are a student (mine or otherwise), please use these materials freely to
-learn about algorithm design.
+learn about programming languages.
 
 These materials are intended to be an open educational resource. If you are a 
 teacher, see the section
